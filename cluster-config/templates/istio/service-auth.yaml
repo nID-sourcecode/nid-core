@@ -1,0 +1,12 @@
+apiVersion: security.istio.io/v1beta1
+kind: RequestAuthentication
+metadata:
+  name: scopeverification-jwt-auth
+spec:
+  jwtRules:
+    - issuer: "auth.{{ .Release.Namespace }}"
+      jwksUri: http://jwks.{{ .Release.Namespace }}.svc.cluster.local/v1/jwt/jwks
+      forwardOriginalToken: true
+  selector:
+    matchLabels:
+      wasm_filter_scopeverification: enabled

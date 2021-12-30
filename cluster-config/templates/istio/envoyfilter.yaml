@@ -1,0 +1,128 @@
+{{- if .Values.testing }}
+apiVersion: networking.istio.io/v1alpha3
+kind: EnvoyFilter
+metadata:
+  name: ext-proc-filter-databron
+  namespace: nid
+spec:
+  workloadSelector:
+    labels:
+      app: databron
+  configPatches:
+    - applyTo: HTTP_FILTER
+      match:
+        context: SIDECAR_INBOUND
+        listener:
+          filterChain:
+            filter:
+              name: "envoy.filters.network.http_connection_manager"
+              subFilter:
+                name: "envoy.filters.http.router"
+      patch:
+        operation: INSERT_BEFORE
+        value:
+          name: envoy.filters.http.ext_proc
+          typed_config:
+            "@type": type.googleapis.com/envoy.extensions.filters.http.ext_proc.v3alpha.ExternalProcessor
+            grpc_service:
+              envoy_grpc:
+                cluster_name: "outbound|80||nid-filter.{{.Release.Namespace}}.svc.cluster.local"
+                authority: "nid-filter.{{.Release.Namespace}}"
+              initial_metadata:
+                - key: "x-selected-filters"
+                  value: "scopeverification,autopseudo,autobsn,auditlog"
+            failure_mode_allow: false
+            processing_mode:
+              request_header_mode: "SEND"
+              response_header_mode: "SEND"
+              request_body_mode: "BUFFERED"
+              response_body_mode: "BUFFERED"
+              request_trailer_mode: "SKIP"
+              response_trailer_mode: "SKIP"
+            message_timeout: 5s
+---
+{{- end}}
+apiVersion: networking.istio.io/v1alpha3
+kind: EnvoyFilter
+metadata:
+  name: ext-proc-filter-incoming-datasource
+  namespace: nid
+spec:
+  workloadSelector:
+    labels:
+      nid-datasource: enabled
+  configPatches:
+    - applyTo: HTTP_FILTER
+      match:
+        context: SIDECAR_INBOUND
+        listener:
+          filterChain:
+            filter:
+              name: "envoy.filters.network.http_connection_manager"
+              subFilter:
+                name: "envoy.filters.http.router"
+      patch:
+        operation: INSERT_BEFORE
+        value:
+          name: envoy.filters.http.ext_proc
+          typed_config:
+            "@type": type.googleapis.com/envoy.extensions.filters.http.ext_proc.v3alpha.ExternalProcessor
+            grpc_service:
+              envoy_grpc:
+                cluster_name: "outbound|80||nid-filter.{{.Release.Namespace}}.svc.cluster.local"
+                authority: "nid-filter.{{.Release.Namespace}}"
+              initial_metadata:
+                - key: "x-selected-filters"
+                  value: "auditlog,scopeverification,autopseudo"
+            failure_mode_allow: false
+            processing_mode:
+              request_header_mode: "SEND"
+              response_header_mode: "SEND"
+              request_body_mode: "BUFFERED"
+              response_body_mode: "BUFFERED"
+              request_trailer_mode: "SKIP"
+              response_trailer_mode: "SKIP"
+            message_timeout: 5s
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: EnvoyFilter
+metadata:
+  name: ext-proc-filter-outgoing-info
+  namespace: nid
+spec:
+  workloadSelector:
+    labels:
+      nid-dataconsumer: enabled
+  configPatches:
+    - applyTo: HTTP_FILTER
+      match:
+        context: SIDECAR_OUTBOUND
+        listener:
+          filterChain:
+            filter:
+              name: "envoy.filters.network.http_connection_manager"
+              subFilter:
+                name: "istio.stats"
+      patch:
+        operation: INSERT_BEFORE
+        value:
+          name: envoy.filters.http.ext_proc
+          typed_config:
+            "@type": type.googleapis.com/envoy.extensions.filters.http.ext_proc.v3alpha.ExternalProcessor
+            grpc_service:
+              envoy_grpc:
+                cluster_name: "outbound|80||nid-filter.{{.Release.Namespace}}.svc.cluster.local" # FIXME make sure nid-filter is applied per namespace
+                authority: "nid-filter.{{.Release.Namespace}}"
+              initial_metadata:
+                - key: "x-selected-filters"
+                  value: "authswap"
+            failure_mode_allow: false
+            processing_mode:
+              request_header_mode: "SEND"
+              response_header_mode: "SKIP"
+              request_body_mode: "BUFFERED"
+              response_body_mode: "NONE"
+              request_trailer_mode: "SKIP"
+              response_trailer_mode: "SKIP"
+            message_timeout: 5s
+---

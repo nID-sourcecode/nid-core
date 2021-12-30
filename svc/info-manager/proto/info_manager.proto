@@ -1,0 +1,47 @@
+syntax = "proto3";
+package infomanager;
+
+import "google/api/annotations.proto";
+import "google/protobuf/empty.proto";
+import "lab.weave.nl/devops/proto-istio-auth-generator/proto/scope.proto";
+
+option go_package = ".;proto";
+
+service InfoManager {
+  rpc ScriptsTest(ScriptsTestRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      post: "/scripts/test"
+      body: "*"
+    };
+  };
+  rpc ScriptsUpload(ScriptsUploadRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      post: "/scripts/upload"
+      body: "*"
+    };
+  };
+  rpc ScriptsGet(ScriptsGetRequest) returns (ScriptsGetRespone) {
+    option (google.api.http) = {
+      get: "/scripts"
+    };
+  };
+}
+
+message ScriptsTestRequest {
+  bytes script = 1;
+}
+
+message ScriptsUploadRequest {
+  bytes  script = 1;
+  string script_id = 2;
+  string change_description = 3;
+}
+
+message ScriptsGetRequest {
+  string script_id = 1;
+  string version = 2;
+}
+
+message ScriptsGetRespone {
+  string signed_url = 1;
+}

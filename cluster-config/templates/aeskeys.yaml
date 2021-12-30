@@ -1,0 +1,8 @@
+# TODO This should be generated on cluster install
+apiVersion: v1
+kind: Secret
+metadata:
+  name: pseudokeys-aes
+data:
+  key.aes: "P49JoU1fr5PBfY3d+ds1LypaP4iCFQxerrUf6fx6WDw="
+  nonce_96.bytes: "HfnQAPhNOtJtL4vyyjhUjAv6MYrLIGC2titvgVaNu5+HHigY0zlhPjacWKitVMde39s9EtR8jicJm5KwdJHBpHQvF/RUPnmVqWQre2yZbcs0FzPZQJKxioGUvbFeb8aQ"

@@ -1,0 +1,45 @@
+dependencies:
+- name: http-proxy
+  repository: gs://weave-helm-chart-repository
+  version: 0.0.3
+- name: http-proxy
+  repository: gs://weave-helm-chart-repository
+  version: 0.0.3
+- name: postgresql
+  repository: https://charts.bitnami.com/bitnami
+  version: 9.3.3
+- name: external-dns
+  repository: https://charts.bitnami.com/bitnami
+  version: 3.3.0
+- name: prometheus
+  repository: https://prometheus-community.github.io/helm-charts
+  version: 11.15.0
+- name: grafana
+  repository: https://grafana.github.io/helm-charts
+  version: 5.6.7
+- name: kiali-server
+  repository: https://kiali.org/helm-charts
+  version: 1.24.0
+- name: elasticsearch
+  repository: https://helm.elastic.co
+  version: 7.10.0
+- name: kibana
+  repository: https://helm.elastic.co
+  version: 7.9.2
+- name: logstash
+  repository: https://helm.elastic.co
+  version: 7.9.2
+- name: jwks
+  repository: https://lab.weave.nl/api/v4/projects/544/packages/helm/stable
+  version: 1.0.0
+- name: redis
+  repository: https://charts.bitnami.com/bitnami
+  version: 12.8.0
+- name: minio
+  repository: https://charts.bitnami.com/bitnami
+  version: 6.5.0
+- name: filebeat
+  repository: https://helm.elastic.co
+  version: 7.13.2
+digest: sha256:1ea00f4faede07e08910e6cda76b7a574cb2890fcabd13484e9cdf5434095865
+generated: "2021-11-29T08:35:45.039302+01:00"

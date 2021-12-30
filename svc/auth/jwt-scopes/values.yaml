@@ -1,0 +1,32 @@
+authscopes:
+  secure:
+  - name: Claim
+    endpoint: /auth.Auth/Claim
+    scope: claim
+  - name: Accept
+    endpoint: /auth.Auth/Accept
+    scope: accept
+  - name: Reject
+    endpoint: /auth.Auth/Reject
+    scope: reject
+  public:
+  - name: Authorize
+    endpoint: /auth.Auth/Authorize
+  - name: AuthorizeHeadless
+    endpoint: /auth.Auth/AuthorizeHeadless
+  - name: GenerateSessionFinaliseToken
+    endpoint: /auth.Auth/GenerateSessionFinaliseToken
+  - name: GetSessionDetails
+    endpoint: /auth.Auth/GetSessionDetails
+  - name: Status
+    endpoint: /auth.Auth/Status
+  - name: Finalise
+    endpoint: /auth.Auth/Finalise
+  - name: Token
+    endpoint: /auth.Auth/Token
+  - name: RegisterAccessModel
+    endpoint: /auth.Auth/RegisterAccessModel
+  - name: GetWellKnownOpenIDConfiguration
+    endpoint: /auth.WellKnown/GetWellKnownOpenIDConfiguration
+  - name: GetWellKnownOAuthAuthorizationServer
+    endpoint: /auth.WellKnown/GetWellKnownOAuthAuthorizationServer

@@ -1,0 +1,246 @@
+run:
+  concurrency: 3
+  timeout: 15m
+  issues-exit-code: 1
+  tests: true
+
+  skip-dirs:
+    - design
+    - \.gopath
+  skip-files:
+  #TODO add generated models files
+  # - ".*\\.my\\.go$
+
+  # list of build tags, all linters use it. Default is empty list
+  build-tags:
+    - integration
+
+# output configuration options
+output:
+  # colored-line-number|line-number|json|tab|checkstyle|code-climate, default is "colored-line-number"
+  format: code-climate
+
+  # print lines of code with issue, default is true
+  print-issued-lines: true
+
+  # print linter name in the end of issue text, default is true
+  print-linter-name: true
+
+  uniq-by-line: false
+
+# all available settings of specific linters
+linters-settings:
+
+  gci:
+    local-prefixes: "lab.weave.nl"
+
+  errcheck:
+    check-type-assertions: false
+
+    check-blank: true
+
+    # path to a file containing a list of functions to exclude from checking
+    # see https://github.com/kisielk/errcheck#excluding-functions for details
+    # exclude: /path/to/file.txt
+  govet:
+    # report about shadowed variables
+    check-shadowing: false
+
+  golint:
+    min-confidence: 0.8
+
+  gofmt:
+    simplify: true
+  gocyclo:
+    min-complexity: 18
+  maligned:
+    suggest-new: true
+  dupl:
+    threshold: 175
+  goconst:
+    min-len: 3
+    min-occurrences: 3
+  funlen:
+    lines: 80
+    statements: 50
+  godox:
+    keywords:
+      - HACK
+      - OPTIMIZE
+      - TODO
+      - BUG
+  misspell:
+    locale: UK
+    ignore-words:
+      - color
+  lll:
+    line-length: 120
+    tab-width: 2
+  unused:
+    check-exported: false
+
+  unparam:
+    check-exported: false
+
+  nakedret:
+    max-func-lines: 0
+  prealloc:
+    simple: true
+    range-loops: true # Report preallocation suggestions on range loops, true by default
+    for-loops: false # Report preallocation suggestions on for loops, false by default
+  gocritic:
+    enabled-checks:
+
+    disabled-checks:
+      - regexpMust
+
+    enabled-tags:
+      - performance
+
+    settings: # settings passed to gocritic
+      captLocal: # must be valid enabled check name
+        paramsOnly: true
+      rangeValCopy:
+        sizeThreshold: 32
+  gomodguard:
+    blocked:
+      modules:
+        - goa.design/goa/v3:
+            recommendations:
+              - goa.design/goa/v1
+            reason: "Usa goa version 1."
+        - goa.design/goa/v2:
+            recommendations:
+              - goa.design/goa/v1
+            reason: "Usa goa version 1."
+        - "github.com/davecgh/go-spew":
+            recommendations:
+              - "fmt"
+            reason: "Don't use spew, use fmt.Printf(%+v) for example if you really need to print a whole struct"
+        - "pkg/utils":
+            recommendations:
+              - "pkg/utilities"
+            reason: "Utils is deprecated, packages are moved to utilities"
+      versions:
+
+linters:
+  linters:
+  enable-all: false
+  fast: false
+  enable:
+    - asciicheck
+    - bodyclose
+    - deadcode
+    - dupl
+    - errcheck
+    - exhaustive
+    - exportloopref
+    - funlen
+    - gci
+    - gochecknoglobals
+    - gochecknoinits
+    - gocognit
+    - goconst
+    - gocritic
+    - gocyclo
+    - godox
+    - goerr113
+    - gofmt
+    - gofumpt
+    - goheader
+    - golint
+    - gomnd
+    - gomodguard
+    - goprintffuncname
+    - gosec
+    - gosimple
+    - govet
+    - ineffassign
+    - interfacer
+    - misspell
+    - nakedret
+    - nestif
+    - noctx
+    - nolintlint
+    - rowserrcheck
+    - scopelint
+    - sqlclosecheck
+    - staticcheck
+    - structcheck
+    - stylecheck
+    - typecheck
+    - unconvert
+    - unparam
+    - varcheck
+    - whitespace
+    #- wrapcheck # Temporarily disabled to be discussed in backend clan
+    - tparallel
+    - errorlint
+
+# linters not enabled because of:
+#  maligned
+#  prealloc
+#  lll
+#  goimports # incompatible with gofmt
+#  depguard # Use gomodguard
+#  wsl
+#  dogsled
+#  unused # Results in panic: https://github.com/golangci/golangci-lint/issues/979
+#  godot
+#  testpackage
+
+
+severity:
+  default-severity: error
+  rules:
+    - linters:
+        - gomodguard
+      severity: warning
+
+issues:
+  exclude-rules:
+    # Deprecated old package
+    - path: pkg/utils/jwt
+      linters:
+        - gosec
+        - golint
+        - errcheck
+        - gocritic
+
+    # For projects that use cobra we allow globals and inits
+    - linters:
+        - gochecknoglobals
+        - gochecknoinits
+      path: cmd/
+
+    - path: _mock\.go
+      linters:
+        - gomnd
+        - gocritic
+
+
+    - path: _test\.go
+      linters:
+        - gocyclo
+        - errcheck
+        - dupl
+        - gosec
+        - scopelint
+        - gocritic
+        - funlen
+
+    - linters:
+        - staticcheck
+      text: "SA9003:"
+
+    - linters:
+        - lll
+      text: "^//go:generate "
+
+  exclude-use-default: false
+
+  max-issues-per-linter: 0
+
+  max-same-issues: 0
+
+  new: false

@@ -1,0 +1,228 @@
+dashboard:
+  enabled: true
+documentation:
+  enabled: true
+testing: false
+auth:
+  enabled: true
+wallet:
+  enabled: true
+autobsn:
+  enabled: true
+integrationtests:
+  enabled: false
+luarunner:
+  enabled: false
+
+namespaceGateways: true
+
+postgres:
+  initdbScripts:
+    init-0.sh: |
+      #!/bin/bash
+      echo "Creating databases";
+      export PGPASSWORD=$POSTGRES_PASSWORD;
+      createdb -U postgres authorization;
+      createdb -U postgres wallet;
+      createdb -U postgres luarunner;
+      createdb -U postgres gqlauthdemo;
+      createdb -U postgres auth;
+      createdb -U postgres databron;
+      createdb -U postgres infomanager;
+  fullnameOverride: postgresql
+
+testproxy:
+  service:
+    fullnameOverride: testproxy
+    namespaceOverride: nid
+
+testproxy-testing:
+  service:
+    fullnameOverride: testproxy-testing
+    namespaceOverride: testing
+
+gateway:
+  enabled: true
+  https: true
+  minTlsVersion: TLSV1_3
+  mtls:
+    enabled: false
+
+certificate: true
+
+external-dns:
+  enabled: true
+  sources: [ 'istio-gateway' ]
+  provider: "google"
+  policy: "upsert-only"
+  google:
+    serviceAccountSecret: external-dns-serviceaccount
+  txtOwnerId: "nid-example-cluster"
+
+externalroutes:
+  - name: postmark
+    routes:
+      - rest.messagebird.com
+  - name: messagebird
+    routes:
+      - api.postmarkapp.com
+  - name: gqlproxy
+    routes:
+      - gqlciz.wlz.n-id.network
+
+namespaces:
+  - nid
+
+storageclasses:
+  - name: ssd
+    type: pd-ssd
+    zone: europe-west1-d
+
+prometheus:
+  enabled: false
+  alertmanager:
+    enabled: false
+
+grafana:
+  enabled: false
+  persistence:
+    type: statefulset
+    enabled: true
+  datasources:
+    datasources.yaml:
+      apiVersion: 1
+      datasources:
+        - name: Prometheus
+          type: prometheus
+          access: proxy
+          isDefault: true
+
+kiali-server:
+  enabled: false
+  istio_namespace: "istio-system"
+  cr:
+    create: true
+    # Override to your namespace
+    namespace: nid
+  deployment:
+    ingress_enabled: false
+elk:
+  enabled: false
+
+elasticsearch:
+  replicas: 1
+  # Otherwise it will never become ready, see: https://github.com/elastic/helm-charts/issues/783#issuecomment-701037663
+  clusterHealthCheckParams: 'wait_for_status=yellow&timeout=1s'
+  # Disable privileged init Container creation.
+  sysctlInitContainer:
+    enabled: false
+
+  # Restrict the use of the memory-mapping when sysctlInitContainer is disabled.
+  esConfig:
+    elasticsearch.yml: |
+      node.store.allow_mmap: false
+  # For staging this is probably fine, but for prod we should use more resources
+  esJavaOpts: "-Xmx512m -Xms512m"
+  resources:
+    requests:
+      cpu: "50m"
+      memory: "512M"
+    limits:
+      cpu: "1000m"
+      memory: "2Gi"
+  persistence:
+    enabled: false
+
+  volumeClaimTemplate:
+    accessModes: [ "ReadWriteOnce" ]
+    storageClassName: "default"
+    resources:
+      requests:
+        storage: 5Gi
+
+kibana:
+  resources:
+    requests:
+      cpu: "10m"
+      memory: "10Mi"
+    limits:
+      cpu: "250m"
+      memory: "512Mi"
+
+logstash:
+  persistence:
+    enabled: false
+
+  requests:
+    cpu: "10m"
+    memory: "50Mi"
+  limits:
+    cpu: "1000m"
+    memory: "200Mi"
+
+  logstashConfig:
+    logstash.yml: |
+      http.host: 0.0.0.0
+      xpack.monitoring.enabled: false
+  logstashPipeline:
+    uptime.conf: |
+      input { exec { command => "uptime" interval => 30 } }
+      output { elasticsearch { hosts => ["http://elasticsearch-master:9200"] index => "logstash" } }
+
+minio:
+  enabled: false
+  defaultBuckets: "ibnext-information-lua"
+  resources:
+    requests:
+      memory: "256Mi"
+  service:
+    port: 80
+  ingress:
+    enabled: true
+  fullnameOverride: "minio"
+  host: ""
+
+redis:
+  enabled: false
+  fullnameOverride: redis
+
+filebeat:
+  enabled: false
+  fullnameOverride: filebeat
+  daemonset:
+    enabled: true
+    filebeatConfig:
+      filebeat.yml: |
+        filebeat.inputs:
+        - type: container
+          paths:
+            - /var/log/containers/*.log
+          exclude_files:
+            - '/var/log/containers/filebeat.*'
+            - '/var/log/containers/istiod-*'
+          multiline.type: pattern
+          multiline.pattern: '(^[0-9]{4}-[0-9]{2}-[0-9]{2})|(^\{)|(^\[)'
+          multiline.negate: true
+          multiline.match: after
+
+        processors:
+        - add_tags:
+            tags: ['${ENV}']
+
+        - add_kubernetes_metadata:
+            indexers:
+              - pod_name:
+            matchers:
+              - logs_path:
+                  logs_path: '/var/log/containers/'
+                  resource_type: 'container'
+
+        setup.template.name: "${ENV}"
+        setup.template.pattern: "${ENV}-*"
+        setup.ilm.enabled: false
+
+        output.elasticsearch:
+          hosts: ["https://${ELK_HOST}:443"]
+          username: "${USERNAME}"
+          password: "${PASSWORD}"
+          index: "${ENV}-%{[agent.version]}-%{+yyyy.MM.dd}"

@@ -1,0 +1,1 @@
+Proto files for when we decide to upgrade this service to gRPC. Requires that we understand certificate headers in grpc calls first, thus taking some more time.

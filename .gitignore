@@ -1,0 +1,44 @@
+# Devtools
+.idea/*
+/**/.idea/*
+.vscode/
+__debug_bin
+info
+
+dist/
+bin/
+
+# Mac files
+.DS_Store
+bin/gen
+bin/goagen
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+
+bin/*
+
+*.tgz
+
+
+kubeconfig
+
+svc/*/proto/client/*
+!svc/*/proto/client/package.json.template
+svc/*/Makefile
+svc/*/proto/api_descriptor.pb
+svc/*/proto/*.swagger.json
+reports
+emcache
+filters/*/*.wasm
+local.env
+integration-tests/integration.env
+integration-tests/env/
+
+env/*
+!env/e2e-setup.sample.env
+
+*.wasm

@@ -1,0 +1,90 @@
+apiVersion: networking.istio.io/v1alpha3
+kind: EnvoyFilter
+metadata:
+  name: luafilter-gqlaccess-autopseudo-{{.AppLabel}}
+spec:
+  workloadSelector:
+    labels:
+      app: {{.AppLabel}}
+  configPatches:
+    # The first patch adds the lua filter to the listener/http connection manager
+    - applyTo: HTTP_FILTER
+      match:
+        context: SIDECAR_INBOUND
+        listener:
+          portNumber: 80
+          filterChain:
+            filter:
+              name: "envoy.http_connection_manager"
+              subFilter:
+                name: "envoy.router"
+      patch:
+        operation: INSERT_BEFORE
+        value: # lua filter specification
+          name: envoy.lua
+          typed_config:
+            "@type": "type.googleapis.com/envoy.config.filter.http.lua.v2.Lua"
+            inlineCode: |
+              function envoy_on_request(request_handle)
+                  if request_handle:headers():get(":path") == "{{.GqlURI}}" then
+                      request_handle:logWarn("GQL FILTER STARTING")
+                      local requestBodyBuffer = request_handle:body()
+                      local requestBody = requestBodyBuffer:getBytes(0,requestBodyBuffer:length())
+
+                      -- Make an HTTP call to an upstream host with t he following headers, body, and timeout.
+                      local responseHeadersGql, responseBodyGql = request_handle:httpCall(
+                              "outbound|80||gqlaccess.nid.svc.cluster.local",
+                              {
+                                  [":method"] = "POST",
+                                  [":path"] = "/verify",
+                                  [":authority"] = "gql_access",
+                                  ["Authorization"] = request_handle:headers():get("Authorization"),
+                              },
+                              requestBody,
+                              5000)
+
+                      if responseHeadersGql[":status"] ~= "200" then
+                          request_handle:respond(responseHeadersGql, responseBodyGql)
+                      end
+
+                      request_handle:logWarn("PSEUDO FILTER STARTING")
+                      -- Make an HTTP call to an upstream host with the following headers, body, and timeout.
+                      local responseHeadersPseudo, responseBodyPseudo = request_handle:httpCall(
+                              "outbound|80||autopseudo.{{.Namespace}}.svc.cluster.local",
+                              {
+                                  [":method"] = "POST",
+                                  [":path"] = "/decryptAndApply",
+                                  [":authority"] = "gql_access",
+                                  ["Authorization"] = request_handle:headers():get("Authorization"),
+                              },
+                              requestBody,
+                              5000)
+                      request_handle:logWarn("Debug 2")
+                      if responseHeadersPseudo[":status"] ~= "200" then
+                          request_handle:logWarn("Debug 3")
+                          request_handle:respond(responseHeadersPseudo, responseBodyPseudo)
+                      else
+                        request_handle:logWarn("Debug 4")
+                        local allHeaders = {
+                          [":method"] = "POST",
+                          [":path"] = "{{.GqlURI}}",
+                          [":authority"] = "gql_access",
+                        }
+                        for key, value in pairs(request_handle:headers()) do
+                          allHeaders[key] = value
+                        end
+                        request_handle:logWarn("Debug 5")
+                        -- Make internal http call
+                        local responseHeaders2, responseBody2 = request_handle:httpCall(
+                              "inbound|{{.ServiceHTTPPort}}|http|{{.ServiceName}}.{{.Namespace}}.svc.cluster.local",
+                              allHeaders,
+                              responseBody,
+                              5000)
+                        request_handle:logWarn("Debug 6")
+                        request_handle:respond(responseHeaders2, responseBody2)
+                        request_handle:logWarn("Debug 7")
+                      end
+                  end
+              end
+    # The second patch adds the cluster that is referenced by the lua code
+    # cds match is omitted as a new cluster is being added

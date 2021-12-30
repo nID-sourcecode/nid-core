@@ -1,0 +1,62 @@
+syntax = "proto3";
+package wallet;
+
+import "google/api/annotations.proto";
+// import "google/protobuf/timestamp.proto";
+import "validate/validate.proto";
+
+option go_package = ".;proto";
+
+service Verification {
+
+  // Will verify emailaddress with a token
+  rpc VerifyEmail(VerifyRequest) returns (VerifyResponse) {
+    option (google.api.http) = {
+      post : "/v1/verify-email"
+    };
+  }
+
+  // Will retry verification process
+  rpc RetryVerifyEmail(RetryVerifyRequest) returns (VerifyResponse) {
+    option (google.api.http) = {
+      post : "/v1/retry-verify-email"
+    };
+  }
+
+  // Will retry verification process
+  rpc VerifyPhoneNumber(VerifyRequest) returns (VerifyResponse) {
+    option (google.api.http) = {
+      post : "/v1/retry-verify-email"
+    };
+  }
+
+  // Will retry verification process
+  rpc RetryVerifyPhoneNumber(RetryPhoneRequest) returns (VerifyResponse) {
+    option (google.api.http) = {
+      post : "/v1/retry-verify-email"
+    };
+  }
+}
+
+message VerifyRequest {
+  string id = 1 [(validate.rules).string.uuid = true];
+  string code = 2;  
+}
+
+message RetryVerifyRequest {
+  string id = 1 [(validate.rules).string.uuid = true];
+}
+
+message VerifyResponse {
+  string id = 1;  
+}
+
+message RetryPhoneRequest {
+  string id = 1 [(validate.rules).string.uuid = true];
+  enum PhoneNumberVerificationType {
+    PHONE_NUMBER_VERIFICATION_TYPE_UNSPECIFIED = 0;
+    SMS = 1;
+    TTS = 2;   
+  }
+  PhoneNumberVerificationType verification_type = 2;  
+}

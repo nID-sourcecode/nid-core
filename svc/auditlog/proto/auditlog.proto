@@ -1,0 +1,44 @@
+syntax = "proto3";
+package auditlog;
+
+import "google/api/annotations.proto";
+import "google/protobuf/empty.proto";
+import "validate/validate.proto";
+
+
+option go_package = ".;proto";
+
+service AuditlogService {
+
+  // LogRequest
+  //
+  // Log a Request
+  rpc LogRequest (Request) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      post: "/request/log"
+    };
+  }
+
+  // LogResponse
+  //
+  // Log a Response
+  rpc LogResponse (Response) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      post: "/response/log"
+    };
+  }
+}
+
+
+message Request {
+  string auth = 1;
+  string url = 2 [(validate.rules).string.min_len = 1];
+  string body = 3;
+  string http_method = 4 [(validate.rules).string.min_len = 3];
+  string request_id = 5;
+}
+
+message Response {
+  uint32 status_code = 1;
+  string request_id = 2 [(validate.rules).string.min_len = 1];
+}

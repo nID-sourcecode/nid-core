@@ -1,0 +1,9 @@
+{{/*{{- if .Values.connectinmesh.enabled }}*/}}
+{{/*apiVersion: v1*/}}
+{{/*kind: ConfigMap*/}}
+{{/*metadata:*/}}
+{{/*  name: connect-in-mesh-ca-config*/}}
+{{/*  namespace: nid*/}}
+{{/*data:*/}}
+{{/*  ca.pem: |- {{ .Files.Get .Values.connectinmesh.certPath }}*/}}
+{{/*{{- end }}*/}}

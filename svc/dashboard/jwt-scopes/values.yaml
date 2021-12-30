@@ -1,0 +1,17 @@
+dashboardscopes:
+  secure:
+  - name: DeployService
+    endpoint: /dashboard.Dashboard/DeployService
+    scope: deploy_service
+  - name: DeleteService
+    endpoint: /dashboard.Dashboard/DeleteService
+    scope: delete_service
+  - name: ListNamespaces
+    endpoint: /dashboard.Dashboard/ListNamespaces
+    scope: list_namespaces
+  - name: ListServices
+    endpoint: /dashboard.Dashboard/ListServices
+    scope: list_services
+  public:
+  - name: Signin
+    endpoint: /dashboard.AuthorizationService/Signin

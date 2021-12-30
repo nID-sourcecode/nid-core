@@ -1,0 +1,29 @@
+syntax = "proto3";
+package onboarding;
+
+import "google/api/annotations.proto";
+import "google/protobuf/empty.proto";
+import "lab.weave.nl/devops/proto-istio-auth-generator/proto/scope.proto";
+
+option go_package = ".;proto";
+
+service DataSourceService {
+
+  // ConvertBSNToPseudonym
+  //
+  // ConvertBSNToPseudonym converts a bsn to pseudonym for target namespace.
+  rpc ConvertBSNToPseudonym(ConvertMessage) returns (ConvertResponseMessage) {
+    option (scopes.scope) = "convertbsn";
+    option (google.api.http) = {
+      get : "/v1/onboarding/datasource/convertbsntopseudonym"
+    };
+  }
+}
+
+message ConvertMessage {
+  string bsn = 1;
+}
+
+message ConvertResponseMessage {
+  bytes pseudonym = 1;
+}

@@ -1,0 +1,37 @@
+syntax = "proto3";
+package wallet;
+
+import "google/api/annotations.proto";
+import "google/protobuf/empty.proto";
+
+option go_package = ".;proto";
+
+service Authorization {
+
+  // SignIn
+  //
+  // Sign in using account and user id.
+  rpc SignIn(google.protobuf.Empty) returns (SignInResponse) {
+    option (google.api.http) = {
+      post : "/v1/signin"
+    };
+  }
+
+  // RegisterDevice
+  //
+  // Register a device and receive a generated code and secret for it.
+  rpc RegisterDevice(google.protobuf.Empty) returns (RegisterDeviceResponse) {
+    option (google.api.http) = {
+      post : "/v1/device"
+    };
+  }
+}
+
+message SignInResponse {
+  string bearer = 1;
+}
+
+message RegisterDeviceResponse {
+  string code = 1;
+  string secret = 2;
+}

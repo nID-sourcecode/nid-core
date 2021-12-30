@@ -1,0 +1,41 @@
+{{- if .Values.gateway.enabled }}
+apiVersion: networking.istio.io/v1alpha3
+kind: Gateway
+metadata:
+  name: backend-gateway
+spec:
+  selector:
+    istio: ingressgateway
+  servers:
+    - port:
+        number: 80
+        name: http
+        protocol: HTTP2
+      hosts:
+      {{- range  .Values.gateway.domains }}
+      - {{ . | quote }}
+        {{- end}}
+    {{- if .Values.gateway.https }}
+      tls:
+        httpsRedirect: true # sends 301 redirect for http requests
+    - port:
+        name: https
+        number: {{ default 443 .Values.gateway.httpsPort }}
+        protocol: HTTPS
+      hosts:
+      {{- range  .Values.gateway.domains }}
+      - {{ . | quote }}
+      {{- end}}
+      tls:
+        minProtocolVersion: {{ .Values.gateway.minTlsVersion }}
+      {{- if not .Values.gateway.mtls.enabled }}
+        credentialName: wildcard-example
+        mode: SIMPLE
+        privateKey: sds
+        serverCertificate: sds
+      {{- else}}
+        credentialName: {{ .Values.gateway.mtls.secretName }}
+        mode: MUTUAL
+      {{- end}}
+    {{- end}}
+{{- end }}

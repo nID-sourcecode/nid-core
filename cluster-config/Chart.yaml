@@ -1,0 +1,84 @@
+apiVersion: v2
+
+#TODO rename namespace config
+name: cluster-config
+description: Nid cluster config chart
+
+# A chart can be either an 'application' or a 'library' chart.
+#
+# Application charts are a collection of templates that can be packaged into versioned archives
+# to be deployed.
+#
+# Library charts provide useful utilities or functions for the chart developer. They're included as
+# a dependency of application charts to inject those utilities and functions into the rendering
+# pipeline. Library charts do not define any templates and therefore cannot be deployed.
+type: application
+
+# This is the chart version. This version number should be incremented each time you make changes
+# to the chart and its templates, including the app version.
+version: 0.1.0
+
+# This is the version number of the application being deployed. This version number should be
+# incremented each time you make changes to the application.
+appVersion: 1.16.0
+
+
+dependencies:
+  - name: http-proxy
+    version: 0.0.3
+    repository: gs://weave-helm-chart-repository
+    alias: testproxy
+    condition: testing
+  - name: http-proxy
+    version: 0.0.3
+    repository: gs://weave-helm-chart-repository
+    alias: testproxy-testing
+    condition: testing
+  - name: postgresql
+    version: 9.3.3
+    repository: https://charts.bitnami.com/bitnami
+    alias: postgres
+  # If we want to use custom charts we can just put them in this repo and use `file://`
+  - name: external-dns
+    version: 3.3.0
+    repository: https://charts.bitnami.com/bitnami
+    condition: external-dns.enabled
+  - name: prometheus
+    version: 11.15.0
+    repository: https://prometheus-community.github.io/helm-charts
+    condition: prometheus.enabled
+  - name: grafana
+    version: 5.6.7
+    repository:  https://grafana.github.io/helm-charts
+    condition: grafana.enabled
+  - name: kiali-server
+    repository: https://kiali.org/helm-charts
+    condition: kiali-server.enabled
+    version: 1.24.0
+  - name: elasticsearch
+    condition: elk.enabled
+    repository: https://helm.elastic.co
+    version: 7.10.0
+  - name: kibana
+    version: 7.9.2
+    repository: https://helm.elastic.co
+    condition: elk.enabled
+  - name: logstash
+    version: 7.9.2
+    repository: https://helm.elastic.co
+    condition: elk.enabled
+  - name: jwks
+    repository: '@weavejwks'
+    version: 1.0.0
+  - name: redis
+    version: 12.8.0
+    repository: https://charts.bitnami.com/bitnami
+    condition: redis.enabled
+  - name: minio
+    version: 6.5.0
+    repository: https://charts.bitnami.com/bitnami
+    condition: minio.enabled
+  - name: filebeat
+    version: 7.13.2
+    repository: https://helm.elastic.co
+    condition: filebeat.enabled

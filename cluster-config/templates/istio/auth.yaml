@@ -1,0 +1,288 @@
+# To verify that the issuer is correctly checked, update it to a random value, deploy the resource and execute the DashboardIntegrationTest.
+# for authorized routes it should return `Jwt issuer is not configured`
+{{- if .Values.dashboard.enabled}}
+apiVersion: security.istio.io/v1beta1
+kind: RequestAuthentication
+metadata:
+  name: dashboard
+spec:
+  selector:
+    matchLabels:
+      app: dashboard
+  jwtRules:
+    - issuer: dashboard
+      audiences: ["dashboard"]
+      jwksUri: http://jwks.{{ .Release.Namespace }}.svc.cluster.local/v1/jwt/jwks
+---
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: allow-login-dashboard
+spec:
+  selector:
+    matchLabels:
+      app: dashboard
+  action: ALLOW
+  rules:
+    - to:
+      - operation:
+          paths: [
+              "/grpc.reflection.v1alpha.ServerReflection.ServerReflectionInfo",
+              {{ if .Values.dashboardscopes.public }}
+              {{ range .Values.dashboardscopes.public }}
+              "{{ .endpoint }}",
+              {{ end }}
+              {{- end}}
+          ]
+---
+#FIXME: https://lab.weave.nl/twi/core/-/issues/83
+  {{ range .Values.dashboardscopes.secure }}
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: allow-dashboard-{{ lower .name }}
+spec:
+  selector:
+    matchLabels:
+      app: dashboard
+  action: ALLOW
+  rules:
+    - to:
+      - operation:
+          paths: ["{{ .endpoint }}"]
+          ports: ["443", "80"]
+      when:
+        - key: request.auth.claims[scope]
+          values: [{{ .scope }}]
+---
+  {{- end }}
+  {{- end }}
+{{- if .Values.documentation.enabled}}
+apiVersion: security.istio.io/v1beta1
+kind: RequestAuthentication
+metadata:
+  name: documentation
+spec:
+  selector:
+    matchLabels:
+      app: documentation
+  jwtRules:
+    - issuer: dashboard
+      audiences: ["dashboard"]
+      jwksUri: http://jwks.{{ .Release.Namespace }}.svc.cluster.local/v1/jwt/jwks
+---
+#FIXME: https://lab.weave.nl/twi/core/-/issues/83
+  {{ range .Values.documentationscopes.secure }}
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: allow-documentation-{{ lower .name }}
+spec:
+  selector:
+    matchLabels:
+      app: documentation
+  action: ALLOW
+  rules:
+    - to:
+        - operation:
+            paths: ["{{ .endpoint }}"]
+            ports: ["443", "80"]
+      when:
+        - key: request.auth.claims[scope]
+          values: [{{ .scope }}]
+---
+{{- end }}
+{{- end }}
+{{- if .Values.auth.enabled}}
+apiVersion: security.istio.io/v1beta1
+kind: RequestAuthentication
+metadata:
+  name: auth
+spec:
+  selector:
+    matchLabels:
+      app: auth
+  jwtRules:
+    - issuer: wallet
+      audiences: ["auth"]
+      jwksUri: http://jwks.{{ .Release.Namespace }}.svc.cluster.local/v1/jwt/jwks
+      outputPayloadToHeader: claims
+---
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: deny-request-headleass-not-lua
+spec:
+  selector:
+    matchLabels:
+      app: auth
+  action: DENY
+  rules:
+    - from:
+      - source:
+          notPrincipals: ["cluster.local/ns/{{ .Release.Namespace }}/sa/luarunner"]
+      to:
+        - operation:
+            paths: [
+              "/auth.Auth/AuthorizeHeadless",
+            ]
+---
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: allow-public-auth
+spec:
+  selector:
+    matchLabels:
+      app: auth
+  action: ALLOW
+  rules:
+    - to:
+      - operation:
+          paths: [
+            "/grpc.reflection.v1alpha.ServerReflection/ServerReflectionInfo",
+            {{ if .Values.authscopes.public }}
+            {{ range .Values.authscopes.public }}
+            "{{ .endpoint }}",
+            {{ end }}
+            {{- end}}
+          ]
+---
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: allow-swaptoken-internal-auth
+spec:
+  selector:
+    matchLabels:
+      app: auth
+  action: ALLOW
+  rules:
+    - from:
+      - source:
+          namespaces: ["{{ .Release.Namespace }}"]
+    - to:
+      - operation:
+          paths: ["/auth.Auth/SwapToken"]
+---
+#FIXME: https://lab.weave.nl/twi/core/-/issues/83
+{{ range .Values.authscopes.secure }}
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: allow-auth-{{ lower .name }}
+spec:
+  selector:
+    matchLabels:
+      app: auth
+  action: ALLOW
+  rules:
+    - to:
+      - operation:
+          paths: ["{{ .endpoint }}"]
+          ports: ["443", "80"]
+      when:
+        - key: request.auth.claims[scope]
+          values: [{{ .scope }}]
+---
+{{- end }}
+{{- end }}
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: allow-autopseudo
+spec:
+  selector:
+    matchLabels:
+      app: autopseudo
+  action: ALLOW
+  rules:
+    - to:
+        - operation:
+            paths: ["/jwks"]
+    - from:
+        - source:
+            namespaces: ["{{ .Release.Namespace }}"]
+      to:
+        - operation:
+            paths: ["/decryptAndApply", "/decrypt"]
+---
+{{- if .Values.wallet.enabled}}
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: allow-createconsent-internal-wallet
+spec:
+  selector:
+    matchLabels:
+      app: wallet-rpc
+  action: ALLOW
+  rules:
+    - from:
+        - source:
+            principals: ["cluster.local/ns/{{ .Release.Namespace }}/sa/auth"]
+      to:
+        - operation:
+            paths: ["/wallet.Wallet/CreateConsent"]
+---
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: allow-getbsn-internal-wallet
+spec:
+  selector:
+    matchLabels:
+      app: wallet-rpc
+  action: ALLOW
+  rules:
+    - from:
+        - source:
+            principals: ["cluster.local/ns/{{ .Release.Namespace }}/sa/autobsn"]
+      to:
+        - operation:
+            paths: ["/wallet.Wallet/GetBSNForPseudonym"]
+---
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: allow-public-wallet
+spec:
+  selector:
+    matchLabels:
+      app: wallet-rpc
+  action: ALLOW
+  rules:
+    - to:
+        - operation:
+            paths: ["/wallet.Authorization/SignIn", "/wallet.Authorization/RegisterDevice", "/grpc.reflection.v1alpha.ServerReflection/ServerReflectionInfo"]
+---
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: allow-wallet-gql
+spec:
+  selector:
+    matchLabels:
+      app: wallet-gql
+  action: ALLOW
+  rules:
+    - to:
+        - operation:
+            paths: ["/gql"]
+            ports: ["80"]
+---
+apiVersion: security.istio.io/v1beta1
+kind: RequestAuthentication
+metadata:
+  name: wallet-gql
+spec:
+  selector:
+    matchLabels:
+      app: wallet-gql
+  jwtRules:
+    - issuer: wallet
+      audiences: ["wallet-gql"]
+      jwksUri: http://jwks.{{ .Release.Namespace }}.svc.cluster.local/v1/jwt/jwks
+      outputPayloadToHeader: claims
+---
+{{- end }}

@@ -1,0 +1,11 @@
+{{- range .Values.storageclasses }}
+kind: StorageClass
+apiVersion: storage.k8s.io/v1beta1
+metadata:
+  name: {{ required "A storageclass name should be supplied" .name }}
+provisioner: kubernetes.io/gce-pd
+parameters:
+  type: {{ required "A storageclass type should be supplied" .type }}
+  zone: {{ required "A storageclass zone should be supplied" .zone }}
+---
+{{- end}}

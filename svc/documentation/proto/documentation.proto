@@ -1,0 +1,86 @@
+syntax = "proto3";
+
+package documentation;
+
+import "google/protobuf/empty.proto";
+import "lab.weave.nl/devops/proto-istio-auth-generator/proto/scope.proto";
+import "validate/validate.proto";
+
+option go_package = ".;proto";
+
+// Documentation
+//
+// Documentation fetches docs from the gitlab code repository
+service Documentation {
+
+  // GetFile
+  //
+  // Get markdown file on given file path
+  rpc GetFile(GetFileRequest) returns (GetFileResponse) {
+    option (scopes.scope) = "get_documentation_file";
+  }
+
+  // ListDirectoryFiles
+  //
+  // List markdown files in given directory
+  rpc ListDirectoryFiles(ListDirectoryFilesRequest)
+      returns (ListDirectoryFilesResponse) {
+    option (scopes.scope) = "list_documentation_directory";
+  }
+
+  // ListRepositoryRefs
+  //
+  // List refs of the given repository
+  rpc ListRepositoryRefs(google.protobuf.Empty)
+      returns (ListRepositoryRefsResponse) {
+    option (scopes.scope) = "list_documentation_repository_refs";
+  }
+}
+
+message GetFileRequest {
+  string file_path = 1 [(validate.rules).string.suffix = ".md"];
+  string ref = 2 [(validate.rules).string.min_len = 1];
+  string service_name = 3;
+}
+
+message GetFileResponse {
+  string content = 1;
+  repeated SwaggerFile swagger_files = 2;
+}
+
+message SwaggerFile {
+  string name = 1;
+  string signed_url = 2;
+}
+
+message ListDirectoryFilesRequest {
+  string file_path = 1;
+  string ref = 2 [(validate.rules).string.min_len = 1];
+}
+
+message ListDirectoryFilesResponse {
+  repeated File files = 1;
+}
+
+message File {
+  string name = 1;
+  string extension = 2;
+  string pretty_name = 3;
+  string path = 4;
+  string type = 5;
+}
+
+message ListRepositoryRefsResponse {
+  repeated Ref refs = 1;
+}
+
+message Ref {
+  string name = 1;
+  RefType type = 2;
+}
+
+enum RefType {
+  UNSPECIFIED = 0;
+  TAG = 1;
+  BRANCH = 2;
+}

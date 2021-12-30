@@ -1,0 +1,33 @@
+*.pb.go -diff
+*.pb.validate.go -diff
+
+svc/*/proto/scopes/scopes.go -diff
+svc/*/jwt-scopes/values.yaml -diff
+svc/*/graphql/generated.go
+
+svc/auth/models/accessmodel.go -diff
+svc/auth/models/gqlaccessmodel.go -diff
+svc/auth/models/restaccessmodel.go -diff
+svc/auth/models/audience.go -diff
+svc/auth/models/client.go  -diff
+svc/auth/models/db.go -diff
+svc/auth/models/enums.go -diff
+svc/auth/models/redirecttarget.go -diff
+svc/auth/models/enums.go -diff
+svc/auth/models/user.go -diff
+
+svc/auth-gql/graphql/** -diff
+
+svc/wallet-gql/models/** -diff
+svc/wallet-gql/models/*_addon.go diff
+svc/wallet-gql/graphql/** -diff
+svc/wallet-gql/graphql/*_addon.go diff
+
+svc/info/graphql/** -diff
+svc/info/graphql/*_addon.go diff
+
+svc/info-manager/models/** -diff
+svc/info-manager/models/*_addon.go diff
+
+svc/info-manager-gql/graphql/** -diff
+

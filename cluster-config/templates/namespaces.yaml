@@ -1,0 +1,175 @@
+{{ $namespaces := .Values.namespaces }}
+{{- if .Values.testing }}
+  {{ $namespaces = append $namespaces "testing"}}
+{{- end}}
+{{- range $namespaces }}
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: {{.}}
+  labels:
+    istio-injection: enabled
+
+---
+{{- if $.Values.registrysecret }}
+apiVersion: v1
+data:
+  .dockerconfigjson: {{required "A  valid dockerconfig should be supplied" $.Values.dockerconfigjson | quote}}
+kind: Secret
+metadata:
+  name: registry-weave
+  namespace: {{ . }}
+type: kubernetes.io/dockerconfigjson
+{{- end}}
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: ns-editor-sa
+  namespace: {{ . }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  namespace: {{ . }}
+  name: namespace-editor
+rules:
+  - apiGroups: ["*"] 
+    resources: ["*"]
+    verbs: ["*"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: namespace-editor
+  namespace: {{ . }}
+subjects:
+  - kind: ServiceAccount
+    name: ns-editor-sa
+    apiGroup: ""
+roleRef:
+  kind: Role
+  name: namespace-editor
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: autopseudo
+  namespace: {{ . }}
+  labels:
+    app: autopseudo
+spec:
+  ports:
+    - name: http
+      port: 80
+      targetPort: 80
+  selector:
+    app: autopseudo
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: autopseudo
+  namespace: {{ . }}
+  labels:
+    app: autopseudo
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: autopseudo
+  template:
+    metadata:
+      labels:
+        app: autopseudo
+    spec:
+      containers:
+        - name: autopseudo
+          image: "registry.weave.nl/nid/nid-core/autopseudo:{{ required "NiD core version should be specified " $.Values.nidCoreVersion }}"
+          ports:
+            - containerPort: 80
+          env:
+            - name: NAMESPACE
+              value: {{ . }}
+            - name: RSA_PRIV
+              valueFrom:
+                secretKeyRef:
+                  name: autopseudo-key
+                  key: key
+            - name: PORT
+              value: "80"
+      imagePullSecrets:
+        - name: "registry-weave"
+---
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: allow-autopseudo
+  namespace: {{.}}
+spec:
+  selector:
+    matchLabels:
+      app: autopseudo
+  action: ALLOW
+  rules:
+    - to:
+        - operation:
+            paths: ["/jwks"]
+    - from:
+        - source:
+            namespaces: ["{{ . }}"]
+      to:
+        - operation:
+            paths: ["/decryptAndApply"]
+---
+{{- if $.Values.namespaceGateways }}
+apiVersion: networking.istio.io/v1alpha3
+kind: Gateway
+metadata:
+  name: external-gateway
+  namespace: {{ . }}
+spec:
+  selector:
+    istio: ingressgateway
+  servers:
+    - port:
+        number: 80
+        name: http-gateway
+        protocol: HTTP2
+      hosts:
+        - "*.{{ . }}.{{ $.Values.basedomain }}"
+      {{- if $.Values.gateway.https }}
+      tls:
+        httpsRedirect: true # sends 301 redirect for http requests
+    - port:
+        name: https-gateway
+        number: 443
+        protocol: HTTPS
+      hosts:
+        - "*.{{ . }}.{{ $.Values.basedomain }}"
+      tls:
+        credentialName: external-gateway-wildcard-cert-{{ . }}
+        mode: SIMPLE
+        privateKey: sds
+        serverCertificate: sds
+        minProtocolVersion: TLSV1_3
+      {{- end }}
+---
+{{- end}}
+{{- if $.Values.certificate }}
+apiVersion: cert-manager.io/v1alpha2
+kind: Certificate
+metadata:
+  name: external-gateway-wildcard-cert-{{ . }}
+  namespace: istio-system
+spec:
+  secretName: external-gateway-wildcard-cert-{{ . }}
+  issuerRef:
+    name: letsencrypt
+    kind: ClusterIssuer
+  dnsNames:
+    - "*.{{ . }}.{{ $.Values.basedomain }}"
+---
+{{- end }}
+{{- end}}

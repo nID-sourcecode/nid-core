@@ -1,0 +1,31 @@
+syntax = "proto3";
+
+package pseudonymization;
+
+import "google/api/annotations.proto";
+
+option go_package = ".;pseudonymization";
+
+service Pseudonymizer {
+  rpc Generate(GenerateRequest) returns (GenerateResponse) {
+    option (google.api.http) = { get: "/v1/generate" };
+  }
+  rpc Convert(ConvertRequest) returns (ConvertResponse) {}
+}
+
+message ConvertRequest {
+  string namespace_to = 1;
+  repeated string pseudonyms = 2;
+}
+
+message ConvertResponse {
+  map<string,bytes> conversions = 1;
+}
+
+message GenerateRequest {
+  uint32 amount = 2;
+}
+
+message GenerateResponse {
+  repeated string pseudonyms = 1;
+}

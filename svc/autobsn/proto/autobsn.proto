@@ -1,0 +1,28 @@
+syntax = "proto3";
+
+package autobsn;
+
+import "google/api/annotations.proto";
+import "google/protobuf/empty.proto";
+
+option go_package = ".;proto";
+
+service AutoBSN {
+  rpc ReplacePlaceholderWithBSN(ReplacePlaceholderWithBSNRequest)
+      returns (ReplacePlaceholderWithBSNResponse)
+  {
+    option (google.api.http) = {post: "/replacePlaceholderWithBSN"};
+  }
+}
+
+message ReplacePlaceholderWithBSNRequest {
+  string body = 1;
+  string query = 2;
+  string method = 3;
+  string authorization_header = 4;
+}
+
+message ReplacePlaceholderWithBSNResponse {
+  string body = 1;
+  string query = 2;
+}

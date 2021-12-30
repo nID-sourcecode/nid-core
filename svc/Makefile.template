@@ -1,0 +1,81 @@
+.PHONY: generate
+
+
+PROTO_GEN_VALIDATORS_BIN := $(GOPATH)/bin/protoc-gen-validate
+PROTO_GEN_VALIDATORS := $(GOPATH)/src/github.com/envoyproxy/protoc-gen-validate
+PROTO_GOOGLE_API := $(GOPATH)/src/github.com/googleapis/googleapis
+GOOGLE_APIS_PROTO = $(GOPATH)/src/github.com/googleapis/googleapis
+PROTOC_OPENAPI = $(GOPATH)/src/github.com/grpc-ecosystem/grpc-gateway/protoc-gen-openapiv2
+
+$(GOOGLE_APIS_PROTO):
+	@echo Installing googleapis for protobuf
+	-GO111MODULE=off go get -u github.com/googleapis/googleapis
+
+$(PROTO_GEN_VALIDATORS_BIN): $(PROTO_GEN_VALIDATORS)
+	cd $(GOPATH)/src/github.com/envoyproxy/protoc-gen-validate && $(MAKE) build
+
+$(PROTO_GEN_VALIDATORS):
+	mkdir -p $(GOPATH)/src/github.com/envoyproxy
+	cd $(GOPATH)/src/github.com/envoyproxy &&	git clone git@github.com:envoyproxy/protoc-gen-validate.git
+
+$(PROTOC_OPENAPI):
+	GO111MODULE=off go get -u github.com/grpc-ecosystem/grpc-gateway/protoc-gen-openapiv2
+
+$(AUTH_GEN):
+	GO111MODULE=off go get -u lab.weave.nl/devops/proto-istio-auth-generator/cmd/auth-gen
+
+proto/scopes:
+	mkdir proto/scopes
+
+jwt-scopes/values.yaml proto/scopes/scopes.go: proto/scopes proto/*.proto
+	@docker run -it  -w /build \
+		-v ${PWD}/proto:/build/proto -v ${PWD}/jwt-scopes:/build/jwt-scopes\
+		registry.weave.nl/devops/proto-istio-auth-generator:v0.0.14 \
+		-d=proto -y=/build/jwt-scopes/values.yaml -g=/build/proto/scopes/scopes.go
+
+generate_proto: proto proto/*.pb.go client/*.js proto/api_descriptor.pb
+
+
+DOCKER := $(shell command -v docker 2> /dev/null)
+
+# Fallback to ensure the make generate in the pipelines keep working for now. Eventually we should remove this command from the pipeline
+proto/*.pb.go proto/api_descriptor.pb proto/*.swagger.json: proto/*.proto $(PROTO_GEN_VALIDATORS) $(PROTO_GEN_VALIDATORS_BIN) $(PROTOC_OPENAPI) $(GOOGLE_APIS_PROTO)
+ifndef DOCKER
+	$(MAKE) protoc_nodocker
+else
+	$(MAKE) protoc_docker
+endif
+
+
+protoc_nodocker:
+	protoc -I .\
+	    -I ${GOPATH}/src \
+        -I ${GOPATH}/src/github.com/envoyproxy/protoc-gen-validate \
+        -I ${GOPATH}/src/github.com/googleapis/googleapis \
+        --proto_path=. \
+        --validate_out="lang=go:proto" \
+	    --go_out=plugins=grpc:. \
+	    --go_opt=paths=source_relative proto/*.proto \
+	    --openapiv2_out=.\
+	    --descriptor_set_out=proto/api_descriptor.pb \
+	    --include_imports
+
+
+protoc_docker:
+	docker run -it -w /build --entrypoint protoc\
+		-v ${PWD}/proto:/build/proto\
+		-v /Users/wouter/Sources/envoy:/envoy\
+		registry.weave.nl/docker/golang-goa/protoc:latest\
+		-I .\
+		-I /go/src \
+		-I /go/src/github.com/envoyproxy/protoc-gen-validate \
+		-I /go/src/github.com/googleapis/googleapis \
+		-I /envoy/api \
+		--proto_path=. \
+		--validate_out="lang=go:proto" \
+		--go_out=plugins=grpc:. \
+		--go_opt=paths=source_relative proto/*.proto \
+		--openapiv2_out=.\
+		--descriptor_set_out=proto/api_descriptor.pb \
+		--include_imports
+

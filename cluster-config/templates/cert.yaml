@@ -1,0 +1,31 @@
+{{- if .Values.certificate }}
+apiVersion: cert-manager.io/v1alpha2
+kind: Certificate
+metadata:
+  name: example-wildcard-cert
+  namespace: istio-system
+spec:
+  secretName: wildcard-example
+  issuerRef:
+    name: letsencrypt
+    kind: ClusterIssuer
+  dnsNames:
+    - "*.{{ .Release.Namespace}}.{{ $.Values.basedomain }}"
+---
+{{- end}}
+{{- if .Values.gateway.mtls.enabled }}
+apiVersion: v1
+kind: Secret
+metadata:
+  name: {{.Values.gateway.mtls.secretName}}
+  namespace: istio-system
+type: Opaque
+stringData:
+  tls.key: |
+{{ indent 4 .Values.gateway.mtls.serverKey}}
+  tls.crt: |
+{{ indent 4 .Values.gateway.mtls.serverCert}}
+  ca.crt: |
+{{ indent 4 .Values.gateway.mtls.caCert}}
+---
+{{- end}}

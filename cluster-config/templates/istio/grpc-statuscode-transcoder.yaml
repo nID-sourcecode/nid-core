@@ -1,0 +1,35 @@
+apiVersion: networking.istio.io/v1alpha3
+kind: EnvoyFilter
+metadata:
+  name: grpc-statuscode-transcoder
+spec:
+  workloadSelector:
+    labels:
+      statuscodetranscoder: enabled
+  configPatches:
+    # The first patch adds the lua filter to the listener/http connection manager
+    - applyTo: HTTP_FILTER
+      match:
+        context: SIDECAR_INBOUND
+        listener:
+          portNumber: 80
+          filterChain:
+            filter:
+              name: "envoy.http_connection_manager"
+              subFilter:
+                name: "istio_authn"
+      patch:
+        operation: INSERT_BEFORE
+        value: # lua filter specification
+          name: envoy.lua
+          typed_config:
+            "@type": "type.googleapis.com/envoy.extensions.filters.http.lua.v3.Lua"
+            inlineCode: |
+              function envoy_on_response(response_handle)
+                -- Check whether we're overriding the statuscode in the header.
+                statuscode = response_handle:headers():get("grpc-statuscode")
+                if statuscode then
+                    response_handle:headers():replace(":status", tonumber(statuscode))
+                    response_handle:headers():remove("grpc-statuscode")
+                end
+              end

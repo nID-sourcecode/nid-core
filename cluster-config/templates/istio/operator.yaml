@@ -1,0 +1,12 @@
+apiVersion: install.istio.io/v1alpha1
+kind: IstioOperator
+metadata:
+  name: wallet-rpc
+spec:
+  selector:
+    matchLabels:
+      app: wallet
+  meshConfig:
+    defaultConfig:
+      gatewayTopology:
+        forwardClientCertDetails: SANITIZE_SET

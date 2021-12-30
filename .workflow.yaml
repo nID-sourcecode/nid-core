@@ -1,0 +1,42 @@
+--- 
+workflow: 
+  events: 
+    branch: 
+    - action:
+        attach: "workflow::doing"
+        detach: "workflow::"
+      type: created
+      regex_selector: "[0-9]+-[a-zA-Z]+"
+    merge:
+    - action:
+        attach: "workflow::code review"
+        detach: "workflow::"
+      type: opened
+      regex_selector: "(?:[Cc]los(?:e[sd]?|ing)|[Ff]ix(?:e[sd]|ing)?|[Rr]esolva(?:e[sd]?|ing)|[Ii]mplement(?:s|ed|ing)|[Rr]elat(?:e[sd]?|ing)( to)?) (#[0-9]+[,]?)+"
+      name_no_match: "WIP:.*"
+    - action:
+        attach: "workflow::doing"
+        detach: "workflow::"
+      type: opened
+      regex_selector: "(?:[Cc]los(?:e[sd]?|ing)|[Ff]ix(?:e[sd]|ing)?|[Rr]esolva(?:e[sd]?|ing)|[Ii]mplement(?:s|ed|ing)|[Rr]elat(?:e[sd]?|ing)( to)?) (#[0-9]+[,]?)+"
+      name_match: "WIP:.*"
+    - name: "Attach code review when modified not WIP"
+      action:
+        attach: "workflow::code review"
+        detach: "workflow::"
+      type: modified
+      regex_selector: "(?:[Cc]los(?:e[sd]?|ing)|[Ff]ix(?:e[sd]|ing)?|[Rr]esolva(?:e[sd]?|ing)|[Ii]mplement(?:s|ed|ing)|[Rr]elat(?:e[sd]?|ing)( to)?) (#[0-9]+[,]?)+"
+      name_no_match: "WIP:.*"
+    - name: "Attach doing when modified when WIP"
+      action:
+        attach: "workflow::doing"
+        detach: "workflow::"
+      type: modified
+      regex_selector: "(?:[Cc]los(?:e[sd]?|ing)|[Ff]ix(?:e[sd]|ing)?|[Rr]esolva(?:e[sd]?|ing)|[Ii]mplement(?:s|ed|ing)|[Rr]elat(?:e[sd]?|ing)( to)?) (#[0-9]+[,]?)+"
+      name_match: "WIP:.*"
+    - action:
+        close: true
+        attach: "workflow::done"
+        detach: "workflow::"
+      type: merged
+      regex_selector: "(?:[Cc]los(?:e[sd]?|ing)|[Ff]ix(?:e[sd]|ing)?|[Rr]esolva(?:e[sd]?|ing)|[Ii]mplement(?:s|ed|ing)|[Rr]elat(?:e[sd]?|ing)( to)?) (#[0-9]+[,]?)+"

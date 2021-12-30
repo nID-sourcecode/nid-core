@@ -1,0 +1,11 @@
+documentationscopes:
+  secure:
+  - name: GetFile
+    endpoint: /documentation.Documentation/GetFile
+    scope: get_documentation_file
+  - name: ListDirectoryFiles
+    endpoint: /documentation.Documentation/ListDirectoryFiles
+    scope: list_documentation_directory
+  - name: ListRepositoryRefs
+    endpoint: /documentation.Documentation/ListRepositoryRefs
+    scope: list_documentation_repository_refs

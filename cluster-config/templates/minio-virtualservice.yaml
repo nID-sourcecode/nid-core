@@ -1,0 +1,19 @@
+{{- if .Values.minio.enabled }}
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: minio
+  namespace: nid
+spec:
+  gateways:
+    - backend-gateway
+    - mesh
+  hosts:
+    - {{.Values.minio.host}}
+  http:
+    - route:
+        - destination:
+            host: "minio.nid.svc.cluster.local"
+            port:
+              number: 80
+  {{- end }}

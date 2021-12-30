@@ -1,0 +1,3 @@
+# Errors package 
+
+TODO description

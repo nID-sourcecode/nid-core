@@ -1,0 +1,61 @@
+syntax = "proto3";
+package dashboard;
+
+import "google/protobuf/duration.proto";
+import "google/protobuf/empty.proto";
+import "lab.weave.nl/devops/proto-istio-auth-generator/proto/scope.proto";
+import "validate/validate.proto";
+
+option go_package = ".;proto";
+
+service Dashboard {
+  rpc DeployService(DeployServiceRequest) returns (DeployServiceResponse) {
+    option (scopes.scope) = "deploy_service";
+  }
+  rpc DeleteService(DeleteServiceRequest) returns (google.protobuf.Empty) {
+    option (scopes.scope) = "delete_service";
+  }
+  rpc ListNamespaces(google.protobuf.Empty) returns (NamespaceList) {
+    option (scopes.scope) = "list_namespaces";
+  }
+  rpc ListServices(ListServiceRequest) returns (ServiceList) {
+    option (scopes.scope) = "list_services";
+  }
+}
+
+message DeployServiceRequest {
+  string namespace = 1 [(validate.rules).string.min_len = 1];
+  string service_name = 2 [(validate.rules).string.min_len = 1];
+  int32 service_port = 3;
+  string gql_uri = 4 [(validate.rules).string.min_len = 1];
+  string docker_image = 5;
+  map<string, string> env = 6;
+}
+
+message DeleteServiceRequest {
+  string namespace = 1 [(validate.rules).string.min_len = 1];
+  string name = 2 [(validate.rules).string.min_len = 1];
+}
+
+message DeployServiceResponse {
+  string cluster_uri = 1;
+  string kubernetes_output = 2;
+}
+
+message NamespaceList {
+  repeated string items = 1;
+}
+
+message ListServiceRequest {
+  string namespace = 1;
+}
+
+message ServiceList {
+  repeated Service items = 1;
+}
+
+message Service {
+  string name = 1;
+  string namespace = 2;
+  google.protobuf.Duration age = 3;
+}

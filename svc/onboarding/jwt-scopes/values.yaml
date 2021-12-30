@@ -1,0 +1,5 @@
+onboardingscopes:
+  secure:
+  - name: ConvertBSNToPseudonym
+    endpoint: /onboarding.DataSourceService/ConvertBSNToPseudonym
+    scope: convertbsn

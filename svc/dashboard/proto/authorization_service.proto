@@ -1,0 +1,25 @@
+syntax = "proto3";
+package dashboard;
+
+import "google/api/annotations.proto";
+import "google/protobuf/empty.proto";
+import "lab.weave.nl/devops/proto-istio-auth-generator/proto/scope.proto";
+
+option go_package = ".;proto";
+
+service AuthorizationService {
+
+  // Signin
+  //
+  // Signin using account and user id.
+  rpc Signin(google.protobuf.Empty) returns (SigninResponseMessage) {
+    option (scopes.scope) = "*";
+    option (google.api.http) = {
+      post : "/v1/signin"
+    };
+  }
+}
+
+message SigninResponseMessage {
+  string bearer = 1;
+}

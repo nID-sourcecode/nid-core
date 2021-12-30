@@ -1,0 +1,36 @@
+{{- range .Values.externalroutes }}
+apiVersion: networking.istio.io/v1beta1
+kind: ServiceEntry
+metadata:
+  name: {{ .name }}
+spec:
+  hosts:
+    {{- range .routes}}
+    - {{ . | quote }}
+    {{- end}}
+  location: MESH_EXTERNAL
+  ports:
+    - number: 443
+      name: https
+      protocol: TLS
+  resolution: DNS
+---
+{{- end}}
+{{- if .Values.filebeat.enabled }}
+apiVersion: networking.istio.io/v1beta1
+kind: ServiceEntry
+metadata:
+  name: filebeat
+spec:
+  hosts:
+    {{- with (index .Values.filebeat.daemonset.extraEnvs 0) }}
+    - {{ .value }}
+    {{- end }}
+  location: MESH_EXTERNAL
+  ports:
+    - number: 443
+      name: https
+      protocol: TCP
+  resolution: DNS
+---
+{{- end}}

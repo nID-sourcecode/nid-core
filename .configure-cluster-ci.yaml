@@ -1,0 +1,141 @@
+.configure-cluster:
+  image:
+    name: registry.weave.nl/docker/cloud-sdk-helm:563941ce
+    entrypoint: [""]
+  stage: apply-cluster-config
+  resource_group: cluster_configuration
+  variables:
+    ISTIOVERSION: 1.11.4
+    PACKAGE_PROJECT: 363
+    # Enable this for more verbose debug logging for for example helm, be careful, this can cause the logs to contain sensitive data
+    DEBUG: "false"
+    CLUSTER_CONFIG_HELM_VALUES: '--set "external-dns.google.project=n-id-242713"  --values svc/dashboard/jwt-scopes/values.yaml --values svc/auth/jwt-scopes/values.yaml --values svc/documentation/jwt-scopes/values.yaml'
+    SERVICE_CONFIG_DIR: 'services'
+    HELM_PROJECT_ID: 537
+    REGISTRY_API_URL: $CI_API_V4_URL
+    REGISTRY_CHANNEL: stable
+    REGISTRY_NAME: weave
+    REGISTRY_PASSWORD: $CI_REGISTRY_PASSWORD
+    REGISTRY_USER: $CI_REGISTRY_USER
+  cache:
+    key: istio-cache
+    policy: pull-push
+    paths:
+      - istio-$ISTIOVERSION
+  # Before script authenticates to the cluster, this can be overriden for different k8s providers (aks in twi for example)
+  before_script:
+    # These vars should be filled by the importer
+    - '[ ! -z "$GKE_CLUSTER_NAME" ] || echo "Cluster name not set"'
+    - '[ ! -z "$GCLOUD_ZONE" ] || echo "GCloud zone not set"'
+    - '[ ! -z "$GCLOUD_PROJECT" ] || echo "GCloud project not set"'
+    - gcloud auth activate-service-account --key-file $GOOGLE_KEY
+    - gcloud config set compute/zone $GCLOUD_ZONE
+    - gcloud config set project $GCLOUD_PROJECT
+    - gcloud container clusters get-credentials $GKE_CLUSTER_NAME --zone $GCLOUD_ZONE
+  script:
+    - '[ ! -z "$NAMESPACE" ]'
+    - '[ ! -z "$VALUES" ]'
+    - '[ ! -z "$NID_CORE_VERSION" ]'
+    - export PACKAGE_VERSION=$NID_CORE_VERSION
+    - '[ ! -z "$NID_FRONTEND_VERSION" ]'
+    - '[ ! -z "$GOOGLE_KEY" ]'
+    - export GOOGLE_APPLICATION_CREDENTIALS=$GOOGLE_KEY
+    # Download requirements
+    - PACKAGE_NAMES="jwt-scopes api-descriptors"
+    - 'for PACKAGE_NAME in $PACKAGE_NAMES; do
+        echo "Downloading package $PACKAGE_NAME version $PACKAGE_VERSION";
+        if [ "$CI_SERVER_HOST" == "lab.weave.nl" ]; then
+          echo "Using job token";
+          curl  -L --fail --header "JOB-TOKEN: $CI_JOB_TOKEN" https://lab.weave.nl/api/v4/projects/363/packages/generic/$PACKAGE_NAME/$PACKAGE_VERSION/package.tar > package.tar;
+        else 
+          curl -L --fail --header "PRIVATE-TOKEN: $LAB_WEAVE_DEPLOY_TOKEN" https://lab.weave.nl/api/v4/projects/363/packages/generic/$PACKAGE_NAME/$PACKAGE_VERSION/package.tar > package.tar;
+        fi;
+        tar -xvf package.tar;
+      done'
+    # Set namespace
+    - kubectl get namespace $NAMESPACE > /dev/null || (kubectl create namespace $NAMESPACE && kubectl label namespace $NAMESPACE istio-injection=enabled)
+    - kubectl get namespace cert-manager > /dev/null || (kubectl create namespace cert-manager && kubectl label namespace cert-manager certmanager.k8s.io/disable-validation=true)
+    - helm repo add jetstack https://charts.jetstack.io
+    # Can be removed when it is added to the cloud-sdk-helm image
+    - helm repo add bitnami https://charts.bitnami.com/bitnami
+    - helm repo add --username $REGISTRY_USER --password $REGISTRY_PASSWORD ${REGISTRY_NAME} ${REGISTRY_API_URL}/projects/${HELM_PROJECT_ID}/packages/helm/${REGISTRY_CHANNEL}
+    - if [ "$CI_SERVER_HOST" == "lab.weave.nl" ]; then
+        echo "Using job token";
+        helm repo add --username gitlab-ci-token --password $CI_JOB_TOKEN nid https://lab.weave.nl/api/v4/projects/363/packages/helm/stable;
+      else 
+        helm repo add --username private-token --password $LAB_WEAVE_DEPLOY_TOKEN nid https://lab.weave.nl/api/v4/projects/363/packages/helm/stable;
+      fi;
+    - helm repo update
+    - helm upgrade --install cert-manager jetstack/cert-manager --version v0.15.2 --namespace cert-manager --set installCRDs=true
+    - ./scripts/installistio.sh
+    # Get postgres password, base64 encode it and strip whitespace
+    - export POSTGRESQL_PASSWORD=$(kubectl get secret --namespace $NAMESPACE postgresql -o jsonpath="{.data.postgresql-password}" | base64 -d | tr -d \\n)
+    - "[ -z $POSTGRESQL_PASSWORD ] && export POSTGRESQL_PASSWORD=$(date +%s | sha256sum | base64 | head -c 16 ; echo)"
+    - echo "Installing in namespace $NAMESPACE"
+    - helm search repo cluster-config
+    # When running for a tag we install the version from the helm chart repo
+    # When not running for a tag we install the latest version released on nid/nid-core master
+    - 'if [[  $NID_CORE_VERSION =~ v[0-9]+\.[0-9]+\.[0-9]+-?.* ]]; then
+      echo "Installing remote helm chart version $HELM_VERSION";
+        export HELM_VERSION="--version ${NID_CORE_VERSION:1}";
+        export NID_CORE_CHART="nid/cluster-config";
+      else
+        helm repo add --username gitlab-ci-token --password $CI_JOB_TOKEN weavejwks https://lab.weave.nl/api/v4/projects/544/packages/helm/stable;
+        echo "Installing local (git cloned hash $NID_CORE_VERSION) version of the cluster config";
+        echo -e "machine lab.weave.nl\nlogin gitlab-ci-token\npassword ${CI_JOB_TOKEN}" > ~/.netrc;
+        git clone https://lab.weave.nl/nid/nid-core.git;
+        cd nid-core;
+        git checkout $NID_CORE_VERSION;
+        cd ..;
+        export HELM_VERSION="";
+        export NID_CORE_CHART="nid-core/cluster-config";
+        helm dependency update ./nid-core/cluster-config;
+      fi
+      '
+    - export API_DESCRIPTOR=$(cat proto/api_descriptor.pb | base64 | tr -d '\n')
+    - echo "helm upgrade $NAMESPACE-cluster-config $NID_CORE_CHART --install $HELM_VERSION --devel --set certificate=true --set registrysecret=true --set dockerconfigjson=\"$(cat $DOCKERCFGJSON | base64)\" --namespace $NAMESPACE --values cluster_config_values.yaml  --values $VALUES -set postgres.postgresqlPassword=$POSTGRESQL_PASSWORD --set nidCoreVersion=$NID_CORE_VERSION --set jwks.service.grpc.transcoding.apidescriptor_b64="$API_DESCRIPTOR"  --set \"jwks.service.hosts[0]=jwks.$CLUSTER_HOST\" --set jwks.service.istioVersion=\"$ISTIOVERSION\" $CLUSTER_CONFIG_HELM_VALUES"
+    - helm upgrade $NAMESPACE-cluster-config $NID_CORE_CHART --install $HELM_VERSION --devel --set certificate=true --set registrysecret=true --set dockerconfigjson="$(cat $DOCKERCFGJSON | base64)" --namespace $NAMESPACE --values cluster_config_values.yaml  --values $VALUES --set postgres.postgresqlPassword=$POSTGRESQL_PASSWORD --set nidCoreVersion=$NID_CORE_VERSION --set jwks.service.grpc.transcoding.apidescriptor_b64="$API_DESCRIPTOR"  --set "jwks.service.hosts[0]=jwks.$CLUSTER_HOST" --set jwks.service.istioVersion="$ISTIOVERSION" $CLUSTER_CONFIG_HELM_VALUES
+    - kubectl get secret registry-weave -n $NAMESPACE || kubectl create secret generic registry-weave  --from-file=.dockerconfigjson=$DOCKERCFGJSON --type=kubernetes.io/dockerconfigjson -n $NAMESPACE
+    - if [ "$DEBUG" = "true" ]; then export HELMDEBUG="--debug"; fi
+    # FIXME remove namespace check for default values https://lab.weave.nl/twi/core/-/issues/137
+    - mkdir services_substituted
+    - |
+      for file in $SERVICE_CONFIG_DIR/*.yaml; do
+        svc=$(basename "$file" .yaml);
+        substituted_file="services_substituted/$svc.yaml";
+        echo "Installing $svc service";
+        if stat svc/$svc/proto/api_descriptor.pb &> /dev/null ; then 
+            echo "API descriptor found";
+            export TRANSCODER=$(cat svc/$svc/proto/api_descriptor.pb | base64 | tr -d "\n");
+        else
+            echo "No API descriptor found";
+        fi;
+        envsubst < $file > "${substituted_file}";
+        export SVC_NAMESPACE=$(yq e ".namespace // \"$NAMESPACE\"" ${substituted_file});
+        if [ "$SVC_NAMESPACE" == "$NAMESPACE" ]; then
+          export DEFAULT_VALUES="--values default_svc_values.yaml";
+        else
+          export DEFAULT_VALUES="";
+        fi;
+        echo "installing $svc";
+        helm upgrade --install $svc weave/service $DEFAULT_VALUES --values=${substituted_file} --namespace $SVC_NAMESPACE --set istioVersion="$ISTIOVERSION" --set fullnameOverride=$svc --set grpc.transcoding.apidescriptor_b64=$TRANSCODER --version 4.12.1 --set-string deploymentAnnotations."nid/core_version"="$NID_CORE_VERSION" $HELMDEBUG;
+        export TRANSCODER="";
+      done
+    # Check if all deployments where successful
+    - |
+      for file in $SERVICE_CONFIG_DIR/*.yaml; do
+        svc=$(basename "$file" .yaml);
+        export SVC_NAMESPACE=$(yq e ".namespace // \"$NAMESPACE\"" $file);
+        echo "Checking deployment status of service: $svc in namespace $SVC_NAMESPACE";
+        kubectl rollout status --namespace $SVC_NAMESPACE -w deployment/$svc --timeout=2m;
+      done
+  after_script:
+    - |
+      for file in $SERVICE_CONFIG_DIR/*.yaml; do
+        svc=$(basename "$file" .yaml);
+        export SVC_NAMESPACE=$(yq e ".namespace // \"$NAMESPACE\"" $file);
+        echo "Checking if deployment $svc in namespace $SVC_NAMESPACE has rolled out successfully";
+        kubectl rollout status --namespace $SVC_NAMESPACE -w deployment/$svc --timeout=10s || echo -e "\033[0;31mRollout of $svc failed\033[0m";
+      done
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "master"'

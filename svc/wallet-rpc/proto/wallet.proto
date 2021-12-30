@@ -1,0 +1,52 @@
+syntax = "proto3";
+package wallet;
+
+import "google/api/annotations.proto";
+import "google/protobuf/timestamp.proto";
+import "validate/validate.proto";
+
+option go_package = ".;proto";
+
+service Wallet {
+  // CreateConsent
+  //
+  // Will create a new consent
+  rpc CreateConsent(CreateConsentRequest) returns (ConsentResponse) {
+    option (google.api.http) = {
+      post : "/v1/consent"
+    };
+  }
+
+  rpc GetBSNForPseudonym(GetBSNForPseudonymRequest)
+      returns (GetBSNForPseudonymResponse) {
+
+  }
+}
+
+message CreateConsentRequest {
+  string id = 1 [(validate.rules).string.uuid = true];
+  string access_token = 2;
+  string client_id = 3 [(validate.rules).string.uuid = true];
+  string description = 4;
+  string name = 5;
+  string user_pseudo = 6;
+  google.protobuf.Timestamp granted_at = 7;
+}
+
+message ConsentResponse {
+  string id = 1;
+  string access_token = 2;
+  string client_id = 3;
+  string description = 4;
+  string name = 5;
+  string user_id = 6;
+  google.protobuf.Timestamp granted_at = 7;
+}
+
+message GetBSNForPseudonymRequest {
+  string pseudonym = 1;
+}
+
+message GetBSNForPseudonymResponse {
+  string bsn = 1;
+}

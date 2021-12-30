@@ -1,0 +1,220 @@
+syntax = "proto3";
+package auth;
+
+import "google/api/annotations.proto";
+import "google/protobuf/descriptor.proto";
+import "google/protobuf/empty.proto";
+import "lab.weave.nl/devops/proto-istio-auth-generator/proto/scope.proto";
+import "validate/validate.proto";
+import "well_known.proto";
+
+option go_package = ".;proto";
+
+extend google.protobuf.MethodOptions {
+  WellKnownType well_known_openid_handler = 82463434;
+}
+
+service Auth {
+  rpc Authorize(AuthorizeRequest) returns (google.protobuf.Empty) {
+    option (scopes.scope) = "*";
+    option (google.api.http) = {
+      get: "/authorize"
+    };
+    option (well_known_openid_handler) = AUTHORIZATION_ENDPOINT;
+  }
+
+  rpc AuthorizeHeadless(AuthorizeHeadlessRequest) 
+    returns (google.protobuf.Empty) {
+    option (scopes.scope) = "*";
+    option (google.api.http) = {
+      post: "/authorize-headless"
+    };
+    option (well_known_openid_handler) = AUTHORIZATION_ENDPOINT;
+  }
+
+  rpc Claim(SessionRequest) returns (SessionResponse) {
+    option (scopes.scope) = "claim";
+    option (google.api.http) = {
+      post: "/claim"
+      body: "*"
+    };
+  }
+
+  rpc Accept(AcceptRequest) returns (SessionResponse) {
+    option (scopes.scope) = "accept";
+    option (google.api.http) = {
+      post: "/accept"
+      body: "*"
+    };
+  }
+
+  rpc Reject(SessionRequest) returns (google.protobuf.Empty) {
+    option (scopes.scope) = "reject";
+    option (google.api.http) = {
+      post: "/reject"
+      body: "*"
+    };
+  }
+
+  rpc GenerateSessionFinaliseToken(SessionRequest)
+      returns (SessionAuthorization) {
+    option (scopes.scope) = "*";
+    option (google.api.http) = {
+      post: "/generate-session-finalise-token"
+      body: "*"
+    };
+  }
+
+  rpc GetSessionDetails(SessionRequest) returns (SessionResponse) {
+    option (scopes.scope) = "*";
+    option (google.api.http) = {
+      post: "/details"
+      body: "*"
+    };
+  }
+
+  rpc Status(SessionRequest) returns (StatusResponse) {
+    option (scopes.scope) = "*";
+    option (google.api.http) = {
+      post: "/status"
+      body: "*"
+    };
+  }
+
+  rpc Finalise(FinaliseRequest) returns (FinaliseResponse) {
+    option (scopes.scope) = "*";
+    option (google.api.http) = {
+      post: "/finalise"
+      body: "*"
+    };
+  }
+
+  rpc Token(TokenRequest) returns (TokenResponse) {
+    option (scopes.scope) = "*";
+    option (google.api.http) = {
+      get: "/token"
+    };
+    option (well_known_openid_handler) = TOKEN_ENDPOINT;
+  }
+
+  rpc RegisterAccessModel(AccessModelRequest) returns (google.protobuf.Empty) {
+    option (scopes.scope) = "*";
+    option (google.api.http) = {
+      get: "/register"
+    };
+  }
+
+  rpc SwapToken(SwapTokenRequest) returns (TokenResponse) {
+    option (google.api.http) = {
+      get: "/swap-token"
+    };
+  }
+}
+
+message AuthorizeRequest {
+  string scope = 1;
+  string response_type = 2;
+  string client_id = 3;
+  string redirect_uri = 4;
+  string audience = 5;
+  string optional_scopes = 6;
+}
+
+message AuthorizeHeadlessRequest { 
+  string response_type = 1;
+  string client_id = 2;
+  string redirect_uri = 3;
+  string audience = 4;
+  string query_model_json = 5;
+  string query_model_path = 6;
+}
+
+message SessionRequest {
+  string session_id = 1;
+}
+
+message SessionResponse {
+  string id = 1;
+  SessionState state = 2;
+  Client client = 4;
+  Audience audience = 5;
+  repeated AccessModel required_access_models = 6;
+  repeated AccessModel optional_access_models = 7;
+  repeated AccessModel accepted_access_models = 8;
+}
+
+message AcceptRequest {
+  string session_id = 1;
+  repeated string access_model_ids = 2;
+}
+
+message StatusResponse {
+  SessionState state = 1;
+}
+
+message AccessModel {
+  string id = 1;
+  string name = 2;
+  string hash = 3;
+  string description = 4;
+}
+
+message Client {
+  string id = 1;
+  string name = 2;
+  string logo = 3;
+  string icon = 4;
+  string color = 5;
+}
+
+message Audience {
+  string id = 1;
+  string audience = 2;
+  string namespace = 3;
+}
+
+enum SessionState {
+  UNSPECIFIED = 0;
+  UNCLAIMED = 1;
+  CLAIMED = 2;
+  ACCEPTED = 3;
+  REJECTED = 4;
+  CODE_GRANTED = 5;
+  TOKEN_GRANTED = 6;
+}
+
+message TokenRequest {
+  string grant_type = 1 [(validate.rules).string.const = "authorization_code"];
+  string authorization_code = 2 [(validate.rules).string.min_len = 1];
+}
+
+message SessionAuthorization {
+  string finalise_token = 1;
+}
+
+message FinaliseRequest {
+  string session_id = 1;
+  string session_finalise_token = 2;
+}
+
+message FinaliseResponse {
+  string redirect_location = 1;
+}
+
+message TokenResponse {
+  string access_token = 1;
+  string token_type = 2;
+}
+
+message AccessModelRequest {
+  string audience = 1;
+  string query_model_json = 2;
+  string scope_name = 3;
+  string description = 4;
+}
+
+message SwapTokenRequest {
+  string current_token = 1 [(validate.rules).string.min_len = 1];
+  string query = 2 [(validate.rules).string.min_len = 1];
+  string audience = 3 [(validate.rules).string.min_len = 1];
+}

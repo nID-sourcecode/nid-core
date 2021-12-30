@@ -1,0 +1,10 @@
+{{- range .Values.configmaps}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{required "A valid configmap name should be supplied" .name}}
+  namespace: {{ default $.Release.Namespace .namespace }}
+data:
+{{toYaml (required (printf "A valid (yaml) content for the configmap \"%s\" should be supplied" .name)  .data) | indent 2}}
+---
+{{- end}}
