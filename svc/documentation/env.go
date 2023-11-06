@@ -1,8 +1,8 @@
 package main
 
 import (
-	"lab.weave.nl/nid/nid-core/pkg/environment"
-	"lab.weave.nl/nid/nid-core/pkg/utilities/objectstorage"
+	"github.com/nID-sourcecode/nid-core/pkg/environment"
+	"github.com/nID-sourcecode/nid-core/pkg/utilities/objectstorage"
 )
 
 type objectStorageConfig struct {

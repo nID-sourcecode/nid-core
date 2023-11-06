@@ -1,6 +1,6 @@
 package main
 
-import "lab.weave.nl/nid/nid-core/pkg/environment"
+import "github.com/nID-sourcecode/nid-core/pkg/environment"
 
 // OnboardingConfig contains the configuration for the onboarding service
 type OnboardingConfig struct {

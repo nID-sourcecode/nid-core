@@ -1,0 +1,16 @@
+{{- if .Values.nginx.enabled }}
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: {{ .Values.nginx.fullnameOverride }}
+  namespace: {{ .Release.Namespace }}
+spec:
+    gateways:
+        - backend-gateway
+    hosts:
+        - "{{ .Values.nginx.fullnameOverride }}.{{ .Release.Namespace }}.{{ .Values.basedomain }}"
+    http:
+        - route:
+            - destination:
+                host: {{ .Values.nginx.fullnameOverride }}.{{ .Release.Namespace }}.svc.cluster.local
+{{- end }}

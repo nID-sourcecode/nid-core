@@ -12,7 +12,7 @@ import (
 // GrpcTestSuite is testsuite with a context that can be used for grpc calls
 type GrpcTestSuite struct {
 	ExtendedTestSuite
-	Ctx                       context.Context
+	Ctx                       context.Context // nolint:containedctx
 	ServerTransportStreamMock *ServerTransportStreamMock
 }
 

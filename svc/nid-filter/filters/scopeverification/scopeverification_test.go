@@ -8,21 +8,20 @@ import (
 	"net/url"
 	"testing"
 
-	envoy_core_v3 "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
-	ext_proc_pb "github.com/envoyproxy/go-control-plane/envoy/service/ext_proc/v3alpha"
-	envoy_type_v3 "github.com/envoyproxy/go-control-plane/envoy/type/v3"
+	gql "github.com/nID-sourcecode/nid-core/pkg/gqlclient"
+
+	authv3 "github.com/envoyproxy/go-control-plane/envoy/service/auth/v3"
+	"github.com/nID-sourcecode/nid-core/svc/nid-filter/contract"
+
 	"github.com/stretchr/testify/suite"
 
-	"lab.weave.nl/nid/nid-core/pkg/accessmodel"
-	"lab.weave.nl/nid/nid-core/pkg/extproc/filter"
-	gql "lab.weave.nl/nid/nid-core/pkg/utilities/gqlclient"
-	"lab.weave.nl/nid/nid-core/pkg/utilities/grpctesthelpers"
+	"github.com/nID-sourcecode/nid-core/pkg/accessmodel"
+	"github.com/nID-sourcecode/nid-core/pkg/utilities/grpctesthelpers"
 )
 
 type ScopeVerificationServerTestSuite struct {
 	grpctesthelpers.GrpcTestSuite
-	filterInitializer *FilterInitializer
-	filter            filter.Filter
+	filter contract.AuthorizationRule
 
 	queryNamesAndBankAccount gql.Request
 	queryNames               gql.Request
@@ -32,14 +31,10 @@ type ScopeVerificationServerTestSuite struct {
 }
 
 func (s *ScopeVerificationServerTestSuite) SetupTest() {
-	filter, err := s.filterInitializer.NewFilter()
-	s.Require().NoError(err)
-	s.filter = filter
+	s.filter = New()
 }
 
 func (s *ScopeVerificationServerTestSuite) SetupSuite() {
-	s.filterInitializer = NewScopeVerificationFilterInitializer()
-
 	s.queryNamesAndBankAccount = gql.Request{
 		Query: `{
 			users(filter: {pseudonym: {eq: "$$nid:subject$$"}}) {
@@ -76,67 +71,65 @@ func (s *ScopeVerificationServerTestSuite) SetupSuite() {
 		}`,
 	}
 
-	s.accessModelNames =
-		map[string]interface{}{
-			"t": "GQL", "p": "/gql",
-			"m": map[string]interface{}{
-				"r": map[string]interface{}{
-					"m": map[string]interface{}{
-						"users": "#U",
-					},
+	s.accessModelNames = map[string]interface{}{
+		"t": "GQL", "p": "/gql",
+		"m": map[string]interface{}{
+			"r": map[string]interface{}{
+				"m": map[string]interface{}{
+					"users": "#U",
 				},
-				"U": map[string]interface{}{
-					"f": []string{"firstName", "lastName"},
-					"p": map[string]interface{}{
-						"filter": map[string]interface{}{
-							"pseudonym": map[string]interface{}{
-								"eq": "$$nid:subject$$",
-							},
+			},
+			"U": map[string]interface{}{
+				"f": []string{"firstName", "lastName"},
+				"p": map[string]interface{}{
+					"filter": map[string]interface{}{
+						"pseudonym": map[string]interface{}{
+							"eq": "$$nid:subject$$",
 						},
 					},
 				},
 			},
-		}
+		},
+	}
 
-	s.accessModelBankAccounts =
-		map[string]interface{}{
-			"t": "GQL", "p": "/gql",
-			"m": map[string]interface{}{
-				"r": map[string]interface{}{
-					"m": map[string]interface{}{
-						"users": "#U",
-					},
+	s.accessModelBankAccounts = map[string]interface{}{
+		"t": "GQL", "p": "/gql",
+		"m": map[string]interface{}{
+			"r": map[string]interface{}{
+				"m": map[string]interface{}{
+					"users": "#U",
 				},
-				"U": map[string]interface{}{
-					"m": map[string]interface{}{
-						"bankAccounts": "#B",
-					},
-					"f": []string{},
-					"p": map[string]interface{}{
-						"filter": map[string]interface{}{
-							"pseudonym": map[string]interface{}{
-								"eq": "$$nid:subject$$",
-							},
+			},
+			"U": map[string]interface{}{
+				"m": map[string]interface{}{
+					"bankAccounts": "#B",
+				},
+				"f": []string{},
+				"p": map[string]interface{}{
+					"filter": map[string]interface{}{
+						"pseudonym": map[string]interface{}{
+							"eq": "$$nid:subject$$",
 						},
 					},
 				},
-				"B": map[string]interface{}{
-					"m": map[string]interface{}{
-						"savingsAccounts": "#S",
-					},
-					"f": []string{
-						"accountNumber",
-						"amount",
-					},
+			},
+			"B": map[string]interface{}{
+				"m": map[string]interface{}{
+					"savingsAccounts": "#S",
 				},
-				"S": map[string]interface{}{
-					"f": []string{
-						"amount",
-						"name",
-					},
+				"f": []string{
+					"accountNumber",
+					"amount",
 				},
 			},
-		}
+			"S": map[string]interface{}{
+				"f": []string{
+					"amount",
+					"name",
+				},
+			},
+		},
+	}
 }
 
 func TestScopeVerificationServerTestSuite(t *testing.T) {
@@ -169,7 +162,7 @@ func (s *ScopeVerificationServerTestSuite) toAuthHeader(scopes map[string]interf
 	claimsJSON, err := json.Marshal(claims)
 	s.Require().NoError(err, "error marshalling test claims")
 
-	return fmt.Sprintf(authHeaderFormat, base64.URLEncoding.EncodeToString(claimsJSON))
+	return fmt.Sprintf(authHeaderFormat, base64.RawURLEncoding.EncodeToString(claimsJSON))
 }
 
 func (s *ScopeVerificationServerTestSuite) TestShouldReturnErrBadRequestOnInvalidJSON() {
@@ -189,40 +182,14 @@ func (s *ScopeVerificationServerTestSuite) TestShouldReturnErrBadRequestOnInvali
 		}),
 	}
 
-	body := []byte("{\"some invalid json\":\"indeed}")
+	body := "{\"some invalid json\":\"indeed}"
 
 	ctx := context.TODO()
 
-	res, err := s.filter.OnHTTPRequest(ctx, body, headers)
+	err := s.filter.Check(ctx, returnAuthV3CheckRequest(body, headers))
 
-	expectedRes := &filter.ProcessingResponse{
-		NewHeaders: nil,
-		NewBody:    nil,
-		ImmediateResponse: &ext_proc_pb.ImmediateResponse{
-			Status: &envoy_type_v3.HttpStatus{Code: envoy_type_v3.StatusCode_BadRequest},
-			Headers: &ext_proc_pb.HeaderMutation{
-				SetHeaders: []*envoy_core_v3.HeaderValueOption{
-					{
-						Header: &envoy_core_v3.HeaderValue{
-							Key:   "Content-Type",
-							Value: "application/json",
-						},
-					},
-				},
-				RemoveHeaders: nil,
-			},
-			Body: `{
-    "errors": [
-        {"message": "verifying request: bad request: parsing body: unexpected end of JSON input"}
-    ]
-}`,
-			GrpcStatus: nil,
-			Details:    "",
-		},
-	}
-
-	s.Require().NoError(err)
-	s.Require().Equal(expectedRes, res)
+	s.Error(err)
+	s.ErrorContains(err, "verifying request: bad request: parsing body: unexpected end of JSON input")
 }
 
 func (s *ScopeVerificationServerTestSuite) TestShouldReturnErrBadRequestOnInvalidAuthHeader() {
@@ -232,57 +199,30 @@ func (s *ScopeVerificationServerTestSuite) TestShouldReturnErrBadRequestOnInvali
 		"authorization": "really bad auth header",
 	}
 
-	body := []byte(s.marshal(gql.Request{
+	body := s.marshal(gql.Request{
 		Query: `{
 					usersfilter: {pseudonym: {eq: "$$nid:subject$$"}}) {
 						firstName
 						lastName
 					}
 				}`,
-	}))
+	})
 
 	ctx := context.TODO()
-	res, err := s.filter.OnHTTPRequest(ctx, body, headers)
+	err := s.filter.Check(ctx, returnAuthV3CheckRequest(body, headers))
 
-	expectedRes := &filter.ProcessingResponse{
-		NewHeaders: nil,
-		NewBody:    nil,
-		ImmediateResponse: &ext_proc_pb.ImmediateResponse{
-			Status: &envoy_type_v3.HttpStatus{Code: envoy_type_v3.StatusCode_BadRequest},
-			Headers: &ext_proc_pb.HeaderMutation{
-				SetHeaders: []*envoy_core_v3.HeaderValueOption{
-					{
-						Header: &envoy_core_v3.HeaderValue{
-							Key:   "Content-Type",
-							Value: "application/json",
-						},
-					},
-				},
-				RemoveHeaders: nil,
-			},
-			Body: `{
-    "errors": [
-        {"message": "invalid authorization header: "re..." does not adhere to the Bearer scheme"}
-    ]
-}`,
-			GrpcStatus: nil,
-			Details:    "",
-		},
-	}
-
-	s.Require().NoError(err)
-	s.Require().Equal(expectedRes, res)
+	s.Error(err)
+	s.ErrorContains(err, `invalid authorization header: "re..." does not adhere to the Bearer scheme`)
 }
 
 func (s *ScopeVerificationServerTestSuite) TestVerifyCombinations() {
 	tests := []*struct {
 		name                 string
 		scopes               map[string]interface{}
-		body                 []byte
+		body                 string
 		method               string
 		path                 string
 		errorExpected        bool
-		expectedErrorCode    envoy_type_v3.StatusCode
 		expectedErrorMessage string
 	}{
 		{
@@ -298,7 +238,7 @@ func (s *ScopeVerificationServerTestSuite) TestVerifyCombinations() {
 					"p": "/v1/recipes",
 				},
 			},
-			body:          nil,
+			body:          "",
 			method:        "GET",
 			path:          "/v1/recipes?fruit=strawberry",
 			errorExpected: false,
@@ -317,7 +257,7 @@ func (s *ScopeVerificationServerTestSuite) TestVerifyCombinations() {
 				},
 				"data:names": s.accessModelNames,
 			},
-			body:          nil,
+			body:          "",
 			method:        "GET",
 			path:          "/v1/recipes?fruit=strawberry",
 			errorExpected: false,
@@ -336,11 +276,10 @@ func (s *ScopeVerificationServerTestSuite) TestVerifyCombinations() {
 				},
 				"data:names": s.accessModelNames,
 			},
-			body:                 nil,
+			body:                 "",
 			method:               "GET",
 			path:                 "/v1/recipes?fruit=blueberry",
 			errorExpected:        true,
-			expectedErrorCode:    envoy_type_v3.StatusCode_Forbidden,
 			expectedErrorMessage: "request does not match scopes",
 		},
 		{
@@ -357,11 +296,10 @@ func (s *ScopeVerificationServerTestSuite) TestVerifyCombinations() {
 				},
 				"data:names": s.accessModelNames,
 			},
-			body:                 []byte(""),
+			body:                 "",
 			method:               "POST",
 			path:                 "/gql",
 			errorExpected:        true,
-			expectedErrorCode:    envoy_type_v3.StatusCode_BadRequest,
 			expectedErrorMessage: "verifying request: bad request: parsing body: unexpected end of JSON input",
 		},
 	}
@@ -377,39 +315,13 @@ func (s *ScopeVerificationServerTestSuite) TestVerifyCombinations() {
 			}
 
 			ctx := context.TODO()
-			res, err := s.filter.OnHTTPRequest(ctx, test.body, headers)
-
-			s.Require().NoError(err)
+			err := s.filter.Check(ctx, returnAuthV3CheckRequest(test.body, headers))
 
 			if test.errorExpected {
-				expectedRes := &filter.ProcessingResponse{
-					NewHeaders: nil,
-					NewBody:    nil,
-					ImmediateResponse: &ext_proc_pb.ImmediateResponse{
-						Status: &envoy_type_v3.HttpStatus{Code: test.expectedErrorCode},
-						Headers: &ext_proc_pb.HeaderMutation{
-							SetHeaders: []*envoy_core_v3.HeaderValueOption{
-								{
-									Header: &envoy_core_v3.HeaderValue{
-										Key:   "Content-Type",
-										Value: "application/json",
-									},
-								},
-							},
-							RemoveHeaders: nil,
-						},
-						Body: fmt.Sprintf(`{
-    "errors": [
-        {"message": "%s"}
-    ]
-}`, test.expectedErrorMessage),
-						GrpcStatus: nil,
-						Details:    "",
-					},
-				}
-				s.Require().Equal(expectedRes, res)
+				s.Error(err)
+				s.ErrorContains(err, test.expectedErrorMessage)
 			} else {
-				s.Nil(res)
+				s.NoError(err)
 			}
 		})
 	}
@@ -421,7 +333,6 @@ func (s *ScopeVerificationServerTestSuite) TestVerifyGQLRequest() {
 		scopes               map[string]interface{}
 		req                  gql.Request
 		errorExpected        bool
-		expectedErrorCode    envoy_type_v3.StatusCode
 		expectedErrorMessage string
 	}{
 		{
@@ -458,7 +369,6 @@ func (s *ScopeVerificationServerTestSuite) TestVerifyGQLRequest() {
 			},
 			req:                  s.queryInvalid,
 			errorExpected:        true,
-			expectedErrorCode:    envoy_type_v3.StatusCode_BadRequest,
 			expectedErrorMessage: "verifying request: bad request: parsing GQL query: input:2: Expected Name, found {",
 		},
 		{
@@ -468,7 +378,6 @@ func (s *ScopeVerificationServerTestSuite) TestVerifyGQLRequest() {
 			},
 			req:                  s.queryNamesAndBankAccount,
 			errorExpected:        true,
-			expectedErrorCode:    envoy_type_v3.StatusCode_Forbidden,
 			expectedErrorMessage: "request does not match scopes",
 		},
 		{
@@ -478,7 +387,6 @@ func (s *ScopeVerificationServerTestSuite) TestVerifyGQLRequest() {
 			},
 			req:                  s.queryNamesAndBankAccount,
 			errorExpected:        true,
-			expectedErrorCode:    envoy_type_v3.StatusCode_Forbidden,
 			expectedErrorMessage: "request does not match scopes",
 		},
 		{
@@ -498,7 +406,6 @@ func (s *ScopeVerificationServerTestSuite) TestVerifyGQLRequest() {
 				`,
 			},
 			errorExpected:        true,
-			expectedErrorCode:    envoy_type_v3.StatusCode_Forbidden,
 			expectedErrorMessage: "request does not match scopes",
 		},
 		{
@@ -521,7 +428,6 @@ func (s *ScopeVerificationServerTestSuite) TestVerifyGQLRequest() {
 				},
 			},
 			errorExpected:        true,
-			expectedErrorCode:    envoy_type_v3.StatusCode_Forbidden,
 			expectedErrorMessage: "request does not match scopes",
 		},
 	}
@@ -535,42 +441,16 @@ func (s *ScopeVerificationServerTestSuite) TestVerifyGQLRequest() {
 				":method":       "POST",
 				":path":         "/gql",
 			}
-			body := []byte(s.marshal(test.req))
+			body := s.marshal(test.req)
 
 			ctx := context.TODO()
-			res, err := s.filter.OnHTTPRequest(ctx, body, headers)
-
-			s.Require().NoError(err)
+			err := s.filter.Check(ctx, returnAuthV3CheckRequest(body, headers))
 
 			if test.errorExpected {
-				expectedRes := &filter.ProcessingResponse{
-					NewHeaders: nil,
-					NewBody:    nil,
-					ImmediateResponse: &ext_proc_pb.ImmediateResponse{
-						Status: &envoy_type_v3.HttpStatus{Code: test.expectedErrorCode},
-						Headers: &ext_proc_pb.HeaderMutation{
-							SetHeaders: []*envoy_core_v3.HeaderValueOption{
-								{
-									Header: &envoy_core_v3.HeaderValue{
-										Key:   "Content-Type",
-										Value: "application/json",
-									},
-								},
-							},
-							RemoveHeaders: nil,
-						},
-						Body: fmt.Sprintf(`{
-    "errors": [
-        {"message": "%s"}
-    ]
-}`, test.expectedErrorMessage),
-						GrpcStatus: nil,
-						Details:    "",
-					},
-				}
-				s.Require().Equal(expectedRes, res)
+				s.Error(err)
+				s.ErrorContains(err, test.expectedErrorMessage)
 			} else {
-				s.Nil(res)
+				s.NoError(err)
 			}
 		})
 
@@ -584,39 +464,27 @@ func (s *ScopeVerificationServerTestSuite) TestVerifyGQLRequest() {
 			}
 
 			ctx := context.TODO()
-			res, err := s.filter.OnHTTPRequest(ctx, nil, headers)
-			s.Require().NoError(err)
+			err := s.filter.Check(ctx, returnAuthV3CheckRequest("", headers))
 
 			if test.errorExpected {
-				expectedRes := &filter.ProcessingResponse{
-					NewHeaders: nil,
-					NewBody:    nil,
-					ImmediateResponse: &ext_proc_pb.ImmediateResponse{
-						Status: &envoy_type_v3.HttpStatus{Code: test.expectedErrorCode},
-						Headers: &ext_proc_pb.HeaderMutation{
-							SetHeaders: []*envoy_core_v3.HeaderValueOption{
-								{
-									Header: &envoy_core_v3.HeaderValue{
-										Key:   "Content-Type",
-										Value: "application/json",
-									},
-								},
-							},
-							RemoveHeaders: nil,
-						},
-						Body: fmt.Sprintf(`{
-    "errors": [
-        {"message": "%s"}
-    ]
-}`, test.expectedErrorMessage),
-						GrpcStatus: nil,
-						Details:    "",
-					},
-				}
-				s.Require().Equal(expectedRes, res)
+				s.Error(err)
+				s.ErrorContains(err, test.expectedErrorMessage)
 			} else {
-				s.Nil(res)
+				s.NoError(err)
 			}
 		})
+	}
+}
+
+func returnAuthV3CheckRequest(body string, headers map[string]string) *authv3.CheckRequest {
+	return &authv3.CheckRequest{
+		Attributes: &authv3.AttributeContext{
+			Request: &authv3.AttributeContext_Request{
+				Http: &authv3.AttributeContext_HttpRequest{
+					Headers: headers,
+					Body:    body,
+				},
+			},
+		},
 	}
 }

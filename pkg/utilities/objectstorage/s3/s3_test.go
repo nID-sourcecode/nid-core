@@ -15,10 +15,10 @@ import (
 	"github.com/stretchr/testify/suite"
 	"github.com/vrischmann/envconfig"
 
-	"lab.weave.nl/nid/nid-core/pkg/utilities/errors"
-	"lab.weave.nl/nid/nid-core/pkg/utilities/grpctesthelpers"
-	httputil "lab.weave.nl/nid/nid-core/pkg/utilities/http"
-	"lab.weave.nl/nid/nid-core/pkg/utilities/objectstorage"
+	"github.com/nID-sourcecode/nid-core/pkg/utilities/errors"
+	"github.com/nID-sourcecode/nid-core/pkg/utilities/grpctesthelpers"
+	httputil "github.com/nID-sourcecode/nid-core/pkg/utilities/http"
+	"github.com/nID-sourcecode/nid-core/pkg/utilities/objectstorage"
 )
 
 // S3TestSuite tests the s3 package

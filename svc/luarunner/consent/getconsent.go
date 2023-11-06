@@ -9,14 +9,14 @@ import (
 
 	"github.com/machinebox/graphql"
 
-	"lab.weave.nl/nid/nid-core/pkg/utilities/errors"
-	"lab.weave.nl/nid/nid-core/pkg/utilities/log/v2"
+	"github.com/nID-sourcecode/nid-core/pkg/utilities/errors"
+	"github.com/nID-sourcecode/nid-core/pkg/utilities/log/v2"
 )
 
 // error definitions
 var (
-	ErrUnableToRetrieveConsent error = fmt.Errorf("unable to retrieve consent")
-	ErrClientNameNotRecognized error = fmt.Errorf("given client name was not recognised")
+	errUnableToRetrieveConsent = fmt.Errorf("unable to retrieve consent")
+	errClientNameNotRecognized = fmt.Errorf("given client name was not recognised")
 )
 
 type consentResponse struct {
@@ -48,7 +48,7 @@ func getClientIDFromAuthorizationService(ctx context.Context, clientName string)
 		return "", errors.Wrap(err, "unable to retrieve client id from authorization service")
 	}
 	if len(res.Clients) == 0 {
-		return "", ErrClientNameNotRecognized
+		return "", errClientNameNotRecognized
 	}
 
 	return res.Clients[0].ID, nil
@@ -94,7 +94,7 @@ func GetConsentToken(ctx context.Context, clientName, scopeString, audience, obj
 			return "", errors.Wrap(err, "unable to read failed consent requests response body")
 		}
 
-		return "", fmt.Errorf("%s, %w", b, ErrUnableToRetrieveConsent)
+		return "", fmt.Errorf("%s, %w", b, errUnableToRetrieveConsent)
 	}
 	defer func() {
 		err := resp.Body.Close()

@@ -3,7 +3,7 @@ package graphql
 import (
 	"context"
 
-	"lab.weave.nl/nid/nid-core/pkg/utilities/password"
+	"github.com/nID-sourcecode/nid-core/pkg/password"
 )
 
 // PasswordManager is the password manager responsible for hashing
@@ -12,6 +12,6 @@ import (
 var PasswordManager password.IManager
 
 // MutateAppPassword hashes the password before it is put in the database
-func (cwh *CustomUserHooks) MutateAppPassword(ctx context.Context, password string) (string, error) {
+func (cwh *CustomUserHooks) MutateAppPassword(_ context.Context, password string) (string, error) {
 	return PasswordManager.GenerateHash(password)
 }

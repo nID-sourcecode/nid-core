@@ -4,18 +4,19 @@ import (
 	"fmt"
 	"testing"
 
+	gqlClientMock "github.com/nID-sourcecode/nid-core/pkg/gqlclient/mock"
+
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
 
-	gqlClientMock "lab.weave.nl/nid/nid-core/pkg/utilities/gqlclient/mock"
-	metadataMock "lab.weave.nl/nid/nid-core/pkg/utilities/grpcserver/headers/mock"
-	"lab.weave.nl/nid/nid-core/pkg/utilities/grpctesthelpers"
-	onboardingPB "lab.weave.nl/nid/nid-core/svc/onboarding/proto"
-	pseudoMock "lab.weave.nl/nid/nid-core/svc/pseudonymization/mock"
-	pseudoPB "lab.weave.nl/nid/nid-core/svc/pseudonymization/proto"
+	metadataMock "github.com/nID-sourcecode/nid-core/pkg/utilities/grpcserver/headers/mock"
+	"github.com/nID-sourcecode/nid-core/pkg/utilities/grpctesthelpers"
+	onboardingPB "github.com/nID-sourcecode/nid-core/svc/onboarding/proto"
+	pseudoMock "github.com/nID-sourcecode/nid-core/svc/pseudonymization/mock"
+	pseudoPB "github.com/nID-sourcecode/nid-core/svc/pseudonymization/proto"
 )
 
-var ErrAllesIsLek error = fmt.Errorf("alles is lek")
+var ErrAllesIsLek = fmt.Errorf("alles is lek")
 
 type DashboardServiceTestSuite struct {
 	grpctesthelpers.GrpcTestSuite
@@ -53,7 +54,7 @@ func (s *DashboardServiceTestSuite) TestTranslateBSN() {
 		Bsn: "1234567890",
 	})
 	s.Require().NoError(err)
-	s.Equal("resultpseudonym", fmt.Sprintf("%s", res.Pseudonym))
+	s.Equal("resultpseudonym", string(res.Pseudonym))
 }
 
 func (s *DashboardServiceTestSuite) TestCantGetPseudonymForBSN() {

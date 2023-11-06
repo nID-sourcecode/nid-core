@@ -3,7 +3,7 @@ package luautil
 import (
 	lua "github.com/yuin/gopher-lua"
 
-	"lab.weave.nl/nid/nid-core/pkg/utilities/log/v2"
+	"github.com/nID-sourcecode/nid-core/pkg/utilities/log/v2"
 )
 
 // AddAllLogFunctions registers all LuaLogger functions in a lua state so that they can be called from a script.

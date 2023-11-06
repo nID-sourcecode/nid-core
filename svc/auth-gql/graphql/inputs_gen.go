@@ -10,7 +10,7 @@ import (
 
 	"github.com/gofrs/uuid"
 	"github.com/jinzhu/gorm/dialects/postgres"
-	"lab.weave.nl/nid/nid-core/svc/auth/models"
+	"github.com/nID-sourcecode/nid-core/svc/auth/models"
 )
 
 type AccessModelTypeFilterInput struct {

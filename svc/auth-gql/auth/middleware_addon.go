@@ -8,14 +8,14 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/gorm"
 
-	"lab.weave.nl/nid/nid-core/pkg/gql"
-	"lab.weave.nl/nid/nid-core/pkg/spiffeparser"
-	"lab.weave.nl/nid/nid-core/pkg/utilities/log/v2"
-	"lab.weave.nl/nid/nid-core/svc/auth/models"
+	"github.com/nID-sourcecode/nid-core/pkg/gql"
+	"github.com/nID-sourcecode/nid-core/pkg/spiffeparser"
+	"github.com/nID-sourcecode/nid-core/pkg/utilities/log/v2"
+	"github.com/nID-sourcecode/nid-core/svc/auth/models"
 )
 
 // CheckServiceAccount is a middleware for verifying if the client is wallet
-func CheckServiceAccount(db *gorm.DB, handler http.Handler, user *models.User, serviceAccount, namespace string) gin.HandlerFunc {
+func CheckServiceAccount(_ *gorm.DB, handler http.Handler, user *models.User, serviceAccount, namespace string) gin.HandlerFunc {
 	spiffeParser := spiffeparser.NewDefaultSpiffeParser()
 
 	return func(c *gin.Context) {

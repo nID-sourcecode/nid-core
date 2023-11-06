@@ -8,10 +8,9 @@ import (
 	"github.com/vektah/gqlparser/v2/ast"
 	"github.com/vektah/gqlparser/v2/parser"
 
-	"lab.weave.nl/nid/nid-core/pkg/accessmodel"
-	"lab.weave.nl/nid/nid-core/pkg/accessobject"
-	"lab.weave.nl/nid/nid-core/pkg/utilities/errors"
-	"lab.weave.nl/nid/nid-core/svc/scopeverification/util"
+	"github.com/nID-sourcecode/nid-core/pkg/accessmodel"
+	"github.com/nID-sourcecode/nid-core/pkg/accessobject"
+	"github.com/nID-sourcecode/nid-core/pkg/utilities/errors"
 )
 
 type gqlRequestBody struct {
@@ -87,7 +86,7 @@ func doesQueryMatchScope(vars map[string]interface{}, queryField *ast.Field, pre
 	if len(queryField.SelectionSet) == 0 {
 		for _, scopeModel := range scopeModels {
 			// If so, check whether it is allowed
-			if stringInSlice(queryField.Name, scopeModel.Fields) {
+			if queryField.Name == "__typename" || stringInSlice(queryField.Name, scopeModel.Fields) {
 				return nil
 			}
 		}
@@ -139,7 +138,7 @@ func verifyFilters(vars map[string]interface{}, field *ast.Field, scopeModel *ac
 		if !ok {
 			return errors.Errorf("%w: no access to parameter %s", errInvalidFilter, queryParam.Name)
 		}
-		equal, err := util.JSONEquals(paramValue, paramShouldBe)
+		equal, err := JSONEquals(paramValue, paramShouldBe)
 		if err != nil {
 			return errors.Wrap(err, "comparing parameter values")
 		}

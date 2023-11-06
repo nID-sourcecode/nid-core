@@ -1,23 +1,27 @@
+// Package nid-filter
 package main
 
 import (
-	ext_proc_pb "github.com/envoyproxy/go-control-plane/envoy/service/ext_proc/v3alpha"
+	authv3 "github.com/envoyproxy/go-control-plane/envoy/service/auth/v3"
+	ext_proc_pb "github.com/envoyproxy/go-control-plane/envoy/service/ext_proc/v3"
+	"github.com/nID-sourcecode/nid-core/pkg/extproc"
+	"github.com/nID-sourcecode/nid-core/pkg/extproc/filter"
+	"github.com/nID-sourcecode/nid-core/pkg/keyutil"
+	"github.com/nID-sourcecode/nid-core/pkg/utilities/grpcserver"
+	"github.com/nID-sourcecode/nid-core/pkg/utilities/grpcserver/dial"
+	"github.com/nID-sourcecode/nid-core/pkg/utilities/grpcserver/servicebase"
+	"github.com/nID-sourcecode/nid-core/pkg/utilities/log/v2"
+	authpb "github.com/nID-sourcecode/nid-core/svc/auth/transport/grpc/proto"
+	"github.com/nID-sourcecode/nid-core/svc/nid-filter/contract"
+	"github.com/nID-sourcecode/nid-core/svc/nid-filter/filters/auditlog"
+	"github.com/nID-sourcecode/nid-core/svc/nid-filter/filters/authswap"
+	"github.com/nID-sourcecode/nid-core/svc/nid-filter/filters/autopseudo"
+	"github.com/nID-sourcecode/nid-core/svc/nid-filter/filters/scopeverification"
+	externalauthorization "github.com/nID-sourcecode/nid-core/svc/nid-filter/transport/external_authorization"
+	walletPB "github.com/nID-sourcecode/nid-core/svc/wallet-rpc/proto"
 	"github.com/vrischmann/envconfig"
 	"google.golang.org/grpc"
-
-	"lab.weave.nl/nid/nid-core/pkg/extproc"
-	"lab.weave.nl/nid/nid-core/pkg/extproc/filter"
-	"lab.weave.nl/nid/nid-core/pkg/utilities/grpcserver"
-	"lab.weave.nl/nid/nid-core/pkg/utilities/grpcserver/dial"
-	"lab.weave.nl/nid/nid-core/pkg/utilities/grpcserver/servicebase"
-	"lab.weave.nl/nid/nid-core/pkg/utilities/log/v2"
-	authpb "lab.weave.nl/nid/nid-core/svc/auth/proto"
-	"lab.weave.nl/nid/nid-core/svc/autopseudo/keyutil"
-	"lab.weave.nl/nid/nid-core/svc/nid-filter/filters/auditlog"
-	"lab.weave.nl/nid/nid-core/svc/nid-filter/filters/authswap"
-	"lab.weave.nl/nid/nid-core/svc/nid-filter/filters/autopseudo"
-	"lab.weave.nl/nid/nid-core/svc/nid-filter/filters/scopeverification"
-	walletPB "lab.weave.nl/nid/nid-core/svc/wallet-rpc/proto"
+	"google.golang.org/grpc/credentials/insecure"
 )
 
 func initialise() (*NIDFilterServiceRegistry, *NIDFilterConfig) {
@@ -33,10 +37,12 @@ func initialise() (*NIDFilterServiceRegistry, *NIDFilterConfig) {
 
 	filters := []filter.Initializer{
 		auditlog.NewFilterInitializer(log.GetLogger()),
-		scopeverification.NewScopeVerificationFilterInitializer(),
+	}
+	authorizationRules := []contract.AuthorizationRule{
+		scopeverification.New(),
 	}
 
-	if config.AutopseudoEnabled || config.AutobsnEnabled {
+	if config.AutopseudoEnabled || config.AutobsnEnabled { //nolint:nestif
 		if config.AutopseudoPriv == "" {
 			log.Fatal("AUTOPSEUDO_PRIV is required if AUTOBSN_ENABLED or AUTOPSEUDO_ENABLED is true")
 		}
@@ -46,26 +52,26 @@ func initialise() (*NIDFilterServiceRegistry, *NIDFilterConfig) {
 		}
 
 		if config.AutopseudoEnabled {
-			autopseudoInitializer := autopseudo.NewFilterInitializer(&autopseudo.Config{
+			autopseudoInitializer := autopseudo.New(&autopseudo.Config{
 				Namespace:         config.Namespace,
 				Key:               key,
 				SubjectIdentifier: "$$nid:subject$$",
 				FilterName:        "autopseudo",
 			})
 
-			filters = append(filters, autopseudoInitializer)
+			authorizationRules = append(authorizationRules, autopseudoInitializer)
 		}
 
 		if config.AutobsnEnabled {
 			if config.WalletURI == "" {
 				log.Fatal("WALLET_URI is required if AUTOBSN_ENABLED is true")
 			}
-			connection, err := dial.Service(config.WalletURI, grpc.WithInsecure())
+			connection, err := dial.Service(config.WalletURI, grpc.WithTransportCredentials(insecure.NewCredentials()))
 			if err != nil {
 				log.WithError(err).WithField("uri", config.WalletURI).Fatal("connecting to wallet")
 			}
 			walletClient := walletPB.NewWalletClient(connection)
-			autobsnInitializer := autopseudo.NewFilterInitializer(&autopseudo.Config{
+			autoBSNInitializer := autopseudo.New(&autopseudo.Config{
 				Namespace:         config.Namespace,
 				Key:               key,
 				TranslateToBSN:    true,
@@ -74,7 +80,7 @@ func initialise() (*NIDFilterServiceRegistry, *NIDFilterConfig) {
 				FilterName:        "autobsn",
 			})
 
-			filters = append(filters, autobsnInitializer)
+			authorizationRules = append(authorizationRules, autoBSNInitializer)
 		}
 	}
 
@@ -82,7 +88,7 @@ func initialise() (*NIDFilterServiceRegistry, *NIDFilterConfig) {
 		if config.AuthURI == "" {
 			log.Fatal("AUTH_URI is required if AUTHSWAP_ENABLED is true")
 		}
-		connection, err := dial.Service(config.AuthURI, grpc.WithInsecure())
+		connection, err := dial.Service(config.AuthURI, grpc.WithTransportCredentials(insecure.NewCredentials()))
 		if err != nil {
 			log.WithError(err).WithField("uri", config.AuthURI).Fatal("connecting to auth")
 		}
@@ -92,9 +98,9 @@ func initialise() (*NIDFilterServiceRegistry, *NIDFilterConfig) {
 	}
 
 	externalProcessorServer := extproc.NewExternalProcessorServer(filters)
-
 	registry := &NIDFilterServiceRegistry{
 		externalProcessorService: externalProcessorServer,
+		authorizationRules:       authorizationRules,
 	}
 
 	return registry, config
@@ -107,7 +113,7 @@ func main() {
 	grpcConfig.Port = conf.Port
 	grpcConfig.LogLevel = conf.GetLogLevel()
 	grpcConfig.LogFormatter = conf.GetLogFormatter()
-	err := grpcserver.InitWithConf(registry, grpcConfig)
+	err := grpcserver.InitWithConf(registry, &grpcConfig)
 	if err != nil {
 		log.WithError(err).Fatal("Error initialising grpc server")
 	}
@@ -118,9 +124,12 @@ type NIDFilterServiceRegistry struct {
 	servicebase.Registry
 
 	externalProcessorService ext_proc_pb.ExternalProcessorServer
+	authorizationRules       []contract.AuthorizationRule
 }
 
 // RegisterServices registers the external processor server
-func (r NIDFilterServiceRegistry) RegisterServices(grpcServer *grpc.Server) {
+func (r *NIDFilterServiceRegistry) RegisterServices(grpcServer *grpc.Server) {
+	authv3.RegisterAuthorizationServer(grpcServer, externalauthorization.New(r.authorizationRules))
+
 	ext_proc_pb.RegisterExternalProcessorServer(grpcServer, r.externalProcessorService)
 }

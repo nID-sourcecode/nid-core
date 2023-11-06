@@ -1,3 +1,4 @@
+// Package pseudonymization
 package main
 
 import (
@@ -7,13 +8,13 @@ import (
 	"github.com/vrischmann/envconfig"
 	"google.golang.org/grpc"
 
-	"lab.weave.nl/nid/nid-core/pkg/utilities/grpcserver"
-	"lab.weave.nl/nid/nid-core/pkg/utilities/grpcserver/headers"
-	"lab.weave.nl/nid/nid-core/pkg/utilities/grpcserver/metrics"
-	"lab.weave.nl/nid/nid-core/pkg/utilities/grpcserver/servicebase"
-	"lab.weave.nl/nid/nid-core/pkg/utilities/log/v2"
-	"lab.weave.nl/nid/nid-core/svc/pseudonymization/keymanager"
-	pseudoPB "lab.weave.nl/nid/nid-core/svc/pseudonymization/proto"
+	"github.com/nID-sourcecode/nid-core/pkg/utilities/grpcserver"
+	"github.com/nID-sourcecode/nid-core/pkg/utilities/grpcserver/headers"
+	"github.com/nID-sourcecode/nid-core/pkg/utilities/grpcserver/metrics"
+	"github.com/nID-sourcecode/nid-core/pkg/utilities/grpcserver/servicebase"
+	"github.com/nID-sourcecode/nid-core/pkg/utilities/log/v2"
+	"github.com/nID-sourcecode/nid-core/svc/pseudonymization/keymanager"
+	pseudoPB "github.com/nID-sourcecode/nid-core/svc/pseudonymization/proto"
 )
 
 const (
@@ -50,7 +51,7 @@ func main() {
 	grpcConfig.Port = config.Port
 	grpcConfig.LogLevel = config.GetLogLevel()
 	grpcConfig.LogFormatter = config.GetLogFormatter()
-	err = grpcserver.InitWithConf(registry, grpcConfig)
+	err = grpcserver.InitWithConf(registry, &grpcConfig)
 	if err != nil {
 		log.WithError(err).Fatal("Error initialising grpc server")
 	}

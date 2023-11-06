@@ -4,7 +4,7 @@ import (
 	"github.com/gofrs/uuid"
 	"github.com/jinzhu/gorm/dialects/postgres"
 
-	"lab.weave.nl/nid/nid-core/pkg/utilities/log/v2"
+	"github.com/nID-sourcecode/nid-core/pkg/utilities/log/v2"
 )
 
 // DefaultModel is a default representation of the model

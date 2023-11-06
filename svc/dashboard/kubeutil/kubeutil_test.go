@@ -20,7 +20,7 @@ import (
 
 // Error definitions
 var (
-	ErrTest error = fmt.Errorf("alles is lek")
+	ErrTest = fmt.Errorf("alles is lek")
 )
 
 type KubeUtilServiceTestSuite struct {

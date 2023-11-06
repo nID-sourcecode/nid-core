@@ -6,19 +6,19 @@ import (
 	"github.com/vrischmann/envconfig"
 	"google.golang.org/grpc"
 
-	"lab.weave.nl/nid/nid-core/pkg/jwtconfig"
-	"lab.weave.nl/nid/nid-core/pkg/utilities/grpcserver"
-	"lab.weave.nl/nid/nid-core/pkg/utilities/grpcserver/headers"
-	"lab.weave.nl/nid/nid-core/pkg/utilities/grpcserver/metrics"
-	"lab.weave.nl/nid/nid-core/pkg/utilities/grpcserver/servicebase"
-	"lab.weave.nl/nid/nid-core/pkg/utilities/jwt/v2"
-	"lab.weave.nl/nid/nid-core/pkg/utilities/log/v2"
-	"lab.weave.nl/nid/nid-core/pkg/utilities/password"
-	postmarkUtils "lab.weave.nl/nid/nid-core/pkg/utilities/postmark/v2"
-	"lab.weave.nl/nid/nid-core/svc/wallet-gql/messagebird"
-	"lab.weave.nl/nid/nid-core/svc/wallet-gql/postmark"
-	"lab.weave.nl/nid/nid-core/svc/wallet-rpc/gqlclient"
-	pb "lab.weave.nl/nid/nid-core/svc/wallet-rpc/proto"
+	"github.com/nID-sourcecode/nid-core/pkg/jwtconfig"
+	"github.com/nID-sourcecode/nid-core/pkg/password"
+	"github.com/nID-sourcecode/nid-core/pkg/utilities/grpcserver"
+	"github.com/nID-sourcecode/nid-core/pkg/utilities/grpcserver/headers"
+	"github.com/nID-sourcecode/nid-core/pkg/utilities/grpcserver/metrics"
+	"github.com/nID-sourcecode/nid-core/pkg/utilities/grpcserver/servicebase"
+	"github.com/nID-sourcecode/nid-core/pkg/utilities/jwt/v2"
+	"github.com/nID-sourcecode/nid-core/pkg/utilities/log/v2"
+	"github.com/nID-sourcecode/nid-core/svc/wallet-gql/messagebird"
+	"github.com/nID-sourcecode/nid-core/svc/wallet-gql/postmark"
+	"github.com/nID-sourcecode/nid-core/svc/wallet-rpc/gqlclient"
+	postmarkUtils "github.com/nID-sourcecode/nid-core/svc/wallet-rpc/postmark"
+	pb "github.com/nID-sourcecode/nid-core/svc/wallet-rpc/proto"
 )
 
 func initialise() (*WalletServiceRegistry, *WalletConfig) {
@@ -61,7 +61,7 @@ func initialise() (*WalletServiceRegistry, *WalletConfig) {
 	walletServer := &WalletServer{
 		db:         db,
 		stats:      stats,
-		authClient: gqlclient.NewAuthClient("http://auth-gql.nid.svc.cluster.local/gql"),
+		authClient: gqlclient.NewAuthClient(config.AuthURI),
 	}
 
 	verifierServer := &VerifierServer{
@@ -87,7 +87,7 @@ func main() {
 	grpcConfig.Port = conf.Port
 	grpcConfig.LogLevel = conf.GetLogLevel()
 	grpcConfig.LogFormatter = conf.GetLogFormatter()
-	err := grpcserver.InitWithConf(registry, grpcConfig)
+	err := grpcserver.InitWithConf(registry, &grpcConfig)
 	if err != nil {
 		log.WithError(err).Fatal("Error initialising grpc server")
 	}

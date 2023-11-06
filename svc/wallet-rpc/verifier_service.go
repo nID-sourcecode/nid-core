@@ -7,13 +7,13 @@ import (
 
 	"github.com/gofrs/uuid"
 
-	"lab.weave.nl/nid/nid-core/pkg/utilities/errors"
-	grpcerrors "lab.weave.nl/nid/nid-core/pkg/utilities/grpcserver/errors"
-	"lab.weave.nl/nid/nid-core/pkg/utilities/log/v2"
-	"lab.weave.nl/nid/nid-core/svc/wallet-gql/messagebird"
-	"lab.weave.nl/nid/nid-core/svc/wallet-gql/postmark"
-	"lab.weave.nl/nid/nid-core/svc/wallet-gql/variables"
-	"lab.weave.nl/nid/nid-core/svc/wallet-rpc/proto"
+	"github.com/nID-sourcecode/nid-core/pkg/utilities/errors"
+	grpcerrors "github.com/nID-sourcecode/nid-core/pkg/utilities/grpcserver/errors"
+	"github.com/nID-sourcecode/nid-core/pkg/utilities/log/v2"
+	"github.com/nID-sourcecode/nid-core/svc/wallet-gql/messagebird"
+	"github.com/nID-sourcecode/nid-core/svc/wallet-gql/postmark"
+	"github.com/nID-sourcecode/nid-core/svc/wallet-gql/variables"
+	"github.com/nID-sourcecode/nid-core/svc/wallet-rpc/proto"
 )
 
 const (

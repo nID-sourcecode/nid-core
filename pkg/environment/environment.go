@@ -4,9 +4,9 @@ package environment
 import (
 	logrustash "github.com/bshuster-repo/logrus-logstash-hook"
 	joonix "github.com/joonix/log"
-	"github.com/sirupsen/logrus"
+	"github.com/sirupsen/logrus" //nolint:gomodguard
 
-	"lab.weave.nl/nid/nid-core/pkg/utilities/log/v2"
+	"github.com/nID-sourcecode/nid-core/pkg/utilities/log/v2"
 )
 
 // ConfigInterface needs to be implemented in Service Environments

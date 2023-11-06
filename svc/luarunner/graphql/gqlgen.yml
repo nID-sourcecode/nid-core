@@ -16,7 +16,7 @@ models:
 
 
   Organisation:
-    model: lab.weave.nl/nid/nid-core/svc/luarunner/models.Organisation
+    model: github.com/nID-sourcecode/nid-core/svc/luarunner/models.Organisation
     fields:
       id:
         resolver: true
@@ -24,7 +24,7 @@ models:
         resolver: true
   
   Script:
-    model: lab.weave.nl/nid/nid-core/svc/luarunner/models.Script
+    model: github.com/nID-sourcecode/nid-core/svc/luarunner/models.Script
     fields:
       id:
         resolver: true

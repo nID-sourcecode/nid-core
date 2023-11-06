@@ -4,10 +4,11 @@ package gqlclient
 import (
 	"context"
 
+	"github.com/nID-sourcecode/nid-core/pkg/gqlclient"
+
 	"github.com/gofrs/uuid"
 
-	"lab.weave.nl/nid/nid-core/pkg/utilities/errors"
-	"lab.weave.nl/nid/nid-core/pkg/utilities/gqlclient"
+	"github.com/nID-sourcecode/nid-core/pkg/utilities/errors"
 )
 
 // IAuthClient specifies the AuthClient methods

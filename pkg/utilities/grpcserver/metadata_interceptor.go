@@ -12,17 +12,23 @@ import (
 	"github.com/golang-jwt/jwt"
 	"github.com/grpc-ecosystem/go-grpc-middleware/logging/logrus/ctxlogrus"
 	grpcctxtags "github.com/grpc-ecosystem/go-grpc-middleware/tags"
+
+	//nolint:gomodguard //needed for backwards compatibility
 	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
 
-	"lab.weave.nl/nid/nid-core/pkg/utilities/grpcserver/grpckeys"
-	"lab.weave.nl/nid/nid-core/pkg/utilities/grpcserver/headers"
-	"lab.weave.nl/nid/nid-core/pkg/utilities/grpcserver/logfields"
+	"github.com/nID-sourcecode/nid-core/pkg/utilities/grpcserver/grpckeys"
+	"github.com/nID-sourcecode/nid-core/pkg/utilities/grpcserver/headers"
+	"github.com/nID-sourcecode/nid-core/pkg/utilities/grpcserver/logfields"
+)
+
+const (
+	shortIDLength = 6
 )
 
 // unaryContextLogInterceptor adds a request id and a logger to the context
-func unaryContextLogInterceptor(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
+func unaryContextLogInterceptor(ctx context.Context, req interface{}, _ *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
 	meta, ok := metadata.FromIncomingContext(ctx)
 	if !ok {
 		ctx = ctxlogrus.ToContext(ctx, logrus.WithFields(logrus.Fields{
@@ -199,7 +205,7 @@ func GetIPAddressFromContext(ctx context.Context) string {
 
 // shortID generates a random id of length 6
 func shortID() string {
-	b := make([]byte, 6)
+	b := make([]byte, shortIDLength)
 	_, err := io.ReadFull(rand.Reader, b)
 	if err != nil {
 		panic("unable to read bytes for shortID")

@@ -6,9 +6,9 @@ import (
 
 var (
 	// ErrInvalidFormat is thrown when given string doesn't conform to Format enum
-	ErrInvalidFormat error = fmt.Errorf("invalid log format")
+	ErrInvalidFormat = fmt.Errorf("invalid log format")
 	// ErrInvalidLevel is thrown when given string doesn't conform to Level enum
-	ErrInvalidLevel error = fmt.Errorf("invalid log level")
+	ErrInvalidLevel = fmt.Errorf("invalid log level")
 	// ErrIncorrectFormatter is thrown when format type is not recognised
-	ErrIncorrectFormatter error = fmt.Errorf("unexpected format type")
+	ErrIncorrectFormatter = fmt.Errorf("unexpected format type")
 )

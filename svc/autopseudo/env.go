@@ -1,7 +1,7 @@
 package main
 
 import (
-	"lab.weave.nl/nid/nid-core/pkg/environment"
+	"github.com/nID-sourcecode/nid-core/pkg/environment"
 )
 
 // AutoPseudoConfig implements the used environment variables

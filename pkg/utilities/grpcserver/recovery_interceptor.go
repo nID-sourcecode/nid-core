@@ -8,8 +8,8 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"lab.weave.nl/nid/nid-core/pkg/utilities/grpcserver/logfields"
-	"lab.weave.nl/nid/nid-core/pkg/utilities/grpcserver/loggrpc"
+	"github.com/nID-sourcecode/nid-core/pkg/utilities/grpcserver/logfields"
+	"github.com/nID-sourcecode/nid-core/pkg/utilities/grpcserver/loggrpc"
 )
 
 // getRecoveryFunction returns a function that attempts to recover the panic and return the correct response.

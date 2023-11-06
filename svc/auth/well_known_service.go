@@ -5,19 +5,22 @@ import (
 	"fmt"
 	"regexp"
 
+	"github.com/nID-sourcecode/nid-core/svc/auth/internal/config"
+
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/types/descriptorpb"
 
-	"lab.weave.nl/nid/nid-core/pkg/utilities/errors"
-	"lab.weave.nl/nid/nid-core/pkg/utilities/jwt/v3"
-	"lab.weave.nl/nid/nid-core/pkg/utilities/log/v2"
-	pb "lab.weave.nl/nid/nid-core/svc/auth/proto"
+	"github.com/nID-sourcecode/nid-core/pkg/utilities/errors"
+	"github.com/nID-sourcecode/nid-core/pkg/utilities/jwt/v3"
+	"github.com/nID-sourcecode/nid-core/pkg/utilities/log/v2"
+	"github.com/nID-sourcecode/nid-core/svc/auth/models"
+	pb "github.com/nID-sourcecode/nid-core/svc/auth/transport/grpc/proto"
 )
 
 // WellKnownServiceServer well_kown server
 type WellKnownServiceServer struct {
 	wk        *pb.WellKnownResponse
-	conf      *AuthConfig
+	conf      *config.AuthConfig
 	jwtClient *jwt.Client
 }
 
@@ -60,7 +63,7 @@ func (s *WellKnownServiceServer) initWellKnown(fileDescriptor protoreflect.FileD
 	s.wk = s.createWellKnownResponse(options)
 
 	// Get the claims
-	tokenClaims := &TokenClaims{}
+	tokenClaims := &models.TokenClaims{}
 	claimsKeyList, err := tokenClaims.ListKeys()
 	if err != nil {
 		return ErrUnableToListClaims
@@ -125,7 +128,7 @@ func (s *WellKnownServiceServer) createWellKnownResponse(options []string) *pb.W
 }
 
 // GetWellKnownOpenIDConfiguration implements pb.AuthServer interface
-func (s *WellKnownServiceServer) GetWellKnownOpenIDConfiguration(ctx context.Context, req *pb.WellKnownRequest) (*pb.WellKnownResponse, error) {
+func (s *WellKnownServiceServer) GetWellKnownOpenIDConfiguration(context.Context, *pb.WellKnownRequest) (*pb.WellKnownResponse, error) {
 	return s.wk, nil
 }
 

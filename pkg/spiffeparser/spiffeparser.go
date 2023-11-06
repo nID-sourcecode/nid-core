@@ -4,7 +4,7 @@ package spiffeparser
 import (
 	"regexp"
 
-	"lab.weave.nl/nid/nid-core/pkg/utilities/errors"
+	"github.com/nID-sourcecode/nid-core/pkg/utilities/errors"
 )
 
 // IstioSpiffeCert contains the data from an istio spiffe cert

@@ -6,9 +6,9 @@ import (
 	"strings"
 )
 
-// Error definitions
 var (
-	ErrNoURIFound error = fmt.Errorf("no URI entry with namespace found in certificate")
+	// ErrNoURIFound no URI entry
+	ErrNoURIFound = fmt.Errorf("no URI entry with namespace found in certificate")
 )
 
 // GetNamespaceFromCertificateHeader converts an istio certificate header to a namespace

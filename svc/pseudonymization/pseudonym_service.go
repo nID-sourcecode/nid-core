@@ -6,14 +6,14 @@ import (
 	"crypto/rsa"
 	"encoding/base64"
 
-	"lab.weave.nl/nid/nid-core/pkg/istioutil"
-	goErr "lab.weave.nl/nid/nid-core/pkg/utilities/errors"
-	"lab.weave.nl/nid/nid-core/pkg/utilities/grpcserver/errors"
-	"lab.weave.nl/nid/nid-core/pkg/utilities/grpcserver/headers"
-	"lab.weave.nl/nid/nid-core/pkg/utilities/log/v2"
-	"lab.weave.nl/nid/nid-core/svc/pseudonymization/keymanager"
-	pb "lab.weave.nl/nid/nid-core/svc/pseudonymization/proto"
-	"lab.weave.nl/nid/nid-core/svc/pseudonymization/pseudonymization"
+	"github.com/nID-sourcecode/nid-core/pkg/istioutil"
+	goErr "github.com/nID-sourcecode/nid-core/pkg/utilities/errors"
+	"github.com/nID-sourcecode/nid-core/pkg/utilities/grpcserver/errors"
+	"github.com/nID-sourcecode/nid-core/pkg/utilities/grpcserver/headers"
+	"github.com/nID-sourcecode/nid-core/pkg/utilities/log/v2"
+	"github.com/nID-sourcecode/nid-core/svc/pseudonymization/keymanager"
+	pb "github.com/nID-sourcecode/nid-core/svc/pseudonymization/proto"
+	"github.com/nID-sourcecode/nid-core/svc/pseudonymization/pseudonymization"
 )
 
 // PseudonymizerServer manages all the routes for Pseudonymization

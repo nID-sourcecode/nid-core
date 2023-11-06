@@ -3,8 +3,8 @@ package verification
 import (
 	"net/url"
 
-	"lab.weave.nl/nid/nid-core/pkg/accessmodel"
-	"lab.weave.nl/nid/nid-core/pkg/utilities/errors"
+	"github.com/nID-sourcecode/nid-core/pkg/accessmodel"
+	"github.com/nID-sourcecode/nid-core/pkg/utilities/errors"
 )
 
 // RESTVerifier verifies that the request matches any of the REST scopes in the token.

@@ -17,36 +17,36 @@ models:
     model: lab.weave.nl/weave/generator/gen/scalars.UUID
 
   AccessModelType:
-    model: lab.weave.nl/nid/nid-core/svc/auth/models.AccessModelType
+    model: github.com/nID-sourcecode/nid-core/svc/auth/models.AccessModelType
   SessionState:
-    model: lab.weave.nl/nid/nid-core/svc/auth/models.SessionState
+    model: github.com/nID-sourcecode/nid-core/svc/auth/models.SessionState
 
   AccessModel:
-    model: lab.weave.nl/nid/nid-core/svc/auth/models.AccessModel
+    model: github.com/nID-sourcecode/nid-core/svc/auth/models.AccessModel
     fields:
       id:
         resolver: true
   
   Audience:
-    model: lab.weave.nl/nid/nid-core/svc/auth/models.Audience
+    model: github.com/nID-sourcecode/nid-core/svc/auth/models.Audience
     fields:
       id:
         resolver: true
   
   Client:
-    model: lab.weave.nl/nid/nid-core/svc/auth/models.Client
+    model: github.com/nID-sourcecode/nid-core/svc/auth/models.Client
     fields:
       id:
         resolver: true
   
   GqlAccessModel:
-    model: lab.weave.nl/nid/nid-core/svc/auth/models.GqlAccessModel
+    model: github.com/nID-sourcecode/nid-core/svc/auth/models.GqlAccessModel
     fields:
       id:
         resolver: true
   
   RedirectTarget:
-    model: lab.weave.nl/nid/nid-core/svc/auth/models.RedirectTarget
+    model: github.com/nID-sourcecode/nid-core/svc/auth/models.RedirectTarget
     fields:
       client:
         resolver: true
@@ -54,13 +54,13 @@ models:
         resolver: true
   
   RestAccessModel:
-    model: lab.weave.nl/nid/nid-core/svc/auth/models.RestAccessModel
+    model: github.com/nID-sourcecode/nid-core/svc/auth/models.RestAccessModel
     fields:
       id:
         resolver: true
   
   Session:
-    model: lab.weave.nl/nid/nid-core/svc/auth/models.Session
+    model: github.com/nID-sourcecode/nid-core/svc/auth/models.Session
     fields:
       client:
         resolver: true
@@ -68,7 +68,7 @@ models:
         resolver: true
   
   User:
-    model: lab.weave.nl/nid/nid-core/svc/auth/models.User
+    model: github.com/nID-sourcecode/nid-core/svc/auth/models.User
     fields:
       id:
         resolver: true

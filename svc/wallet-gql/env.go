@@ -1,6 +1,6 @@
 package main
 
-import "lab.weave.nl/nid/nid-core/pkg/environment"
+import "github.com/nID-sourcecode/nid-core/pkg/environment"
 
 // WalletConfig contains the configuration of the wallet service
 type WalletConfig struct {

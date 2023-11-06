@@ -13,10 +13,10 @@ import (
 	mock "github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
 
-	"lab.weave.nl/nid/nid-core/pkg/utilities/grpctesthelpers"
-	"lab.weave.nl/nid/nid-core/svc/autobsn/proto"
-	walletPB "lab.weave.nl/nid/nid-core/svc/wallet-rpc/proto"
-	wallet_mock "lab.weave.nl/nid/nid-core/svc/wallet-rpc/proto/mock"
+	"github.com/nID-sourcecode/nid-core/pkg/utilities/grpctesthelpers"
+	"github.com/nID-sourcecode/nid-core/svc/autobsn/proto"
+	walletPB "github.com/nID-sourcecode/nid-core/svc/wallet-rpc/proto"
+	walletmock "github.com/nID-sourcecode/nid-core/svc/wallet-rpc/proto/mock"
 )
 
 const jwtFormat = "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.%s.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
@@ -44,7 +44,7 @@ func (s *AutoBSNTestSuite) TestReplacePlaceholderWithBSN_WithBody() {
 	s.Require().NoError(err)
 	authHeader := fmt.Sprintf(jwtFormat, base64.StdEncoding.EncodeToString(claimsJSON))
 
-	walletClientMock := wallet_mock.WalletClient{}
+	walletClientMock := walletmock.WalletClient{}
 	server := NewAutoBSNServer(s.key, &walletClientMock)
 
 	walletClientMock.On("GetBSNForPseudonym", mock.Anything, &walletPB.GetBSNForPseudonymRequest{Pseudonym: "QUJDREVGRw=="}).
@@ -78,7 +78,7 @@ func (s *AutoBSNTestSuite) TestReplacePlaceholderWithBSN_WithoutBody() {
 	s.Require().NoError(err)
 	authHeader := fmt.Sprintf(jwtFormat, base64.StdEncoding.EncodeToString(claimsJSON))
 
-	walletClientMock := wallet_mock.WalletClient{}
+	walletClientMock := walletmock.WalletClient{}
 	server := NewAutoBSNServer(s.key, &walletClientMock)
 
 	walletClientMock.On("GetBSNForPseudonym", mock.Anything, &walletPB.GetBSNForPseudonymRequest{Pseudonym: "SElKS0xNTk9Q"}).

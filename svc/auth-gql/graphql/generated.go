@@ -18,7 +18,7 @@ import (
 	"github.com/jinzhu/gorm/dialects/postgres"
 	gqlparser "github.com/vektah/gqlparser/v2"
 	"github.com/vektah/gqlparser/v2/ast"
-	"lab.weave.nl/nid/nid-core/svc/auth/models"
+	"github.com/nID-sourcecode/nid-core/svc/auth/models"
 	"lab.weave.nl/weave/generator/gen/scalars"
 )
 

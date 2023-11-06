@@ -3,14 +3,15 @@ package main
 import (
 	"github.com/vrischmann/envconfig"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 
-	"lab.weave.nl/nid/nid-core/pkg/utilities/grpcserver"
-	"lab.weave.nl/nid/nid-core/pkg/utilities/grpcserver/dial"
-	"lab.weave.nl/nid/nid-core/pkg/utilities/grpcserver/servicebase"
-	"lab.weave.nl/nid/nid-core/pkg/utilities/log/v2"
-	"lab.weave.nl/nid/nid-core/svc/autobsn/proto"
-	"lab.weave.nl/nid/nid-core/svc/autopseudo/keyutil"
-	walletPB "lab.weave.nl/nid/nid-core/svc/wallet-rpc/proto"
+	"github.com/nID-sourcecode/nid-core/pkg/keyutil"
+	"github.com/nID-sourcecode/nid-core/pkg/utilities/grpcserver"
+	"github.com/nID-sourcecode/nid-core/pkg/utilities/grpcserver/dial"
+	"github.com/nID-sourcecode/nid-core/pkg/utilities/grpcserver/servicebase"
+	"github.com/nID-sourcecode/nid-core/pkg/utilities/log/v2"
+	"github.com/nID-sourcecode/nid-core/svc/autobsn/proto"
+	walletPB "github.com/nID-sourcecode/nid-core/svc/wallet-rpc/proto"
 )
 
 const (
@@ -39,7 +40,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	connection, err := dial.Service(conf.WalletURI, grpc.WithInsecure())
+	connection, err := dial.Service(conf.WalletURI, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		log.WithError(err).WithField("uri", conf.WalletURI).Fatal("connecting to wallet")
 	}
@@ -53,7 +54,7 @@ func main() {
 	grpcConfig.Port = conf.Port
 	grpcConfig.LogLevel = conf.GetLogLevel()
 	grpcConfig.LogFormatter = conf.GetLogFormatter()
-	err = grpcserver.InitWithConf(registry, grpcConfig)
+	err = grpcserver.InitWithConf(registry, &grpcConfig)
 	if err != nil {
 		log.WithError(err).Fatal("Error initialising grpc server")
 	}

@@ -1,23 +1,20 @@
 package luautil
 
 import (
-	"context"
-
+	"github.com/nID-sourcecode/nid-core/pkg/gqlclient"
 	lua "github.com/yuin/gopher-lua"
 
-	"lab.weave.nl/nid/nid-core/pkg/utilities/errors"
-	"lab.weave.nl/nid/nid-core/pkg/utilities/gqlclient"
+	"github.com/nID-sourcecode/nid-core/pkg/utilities/errors"
 )
 
 // LuaGraphQLCaller is the default implementation of the lua graphql caller
 type LuaGraphQLCaller struct {
-	ctx           context.Context
 	clientFactory gqlclient.ClientFactory
 }
 
 // NewLuaGraphQLCaller creates a new default lua graphql caller
-func NewLuaGraphQLCaller(ctx context.Context, clientFactory gqlclient.ClientFactory) *LuaGraphQLCaller {
-	return &LuaGraphQLCaller{ctx: ctx, clientFactory: clientFactory}
+func NewLuaGraphQLCaller(clientFactory gqlclient.ClientFactory) *LuaGraphQLCaller {
+	return &LuaGraphQLCaller{clientFactory: clientFactory}
 }
 
 const (
@@ -44,7 +41,7 @@ func (c *LuaGraphQLCaller) Call(state *lua.LState) int {
 	req.Variables = variableMap
 
 	response := make(map[string]interface{})
-	if err := client.Get(c.ctx, req, &response); err != nil {
+	if err := client.Get(state.Context(), req, &response); err != nil {
 		state.RaiseError("%v", errors.Wrap(err, "doing graphql request from lua"))
 	}
 

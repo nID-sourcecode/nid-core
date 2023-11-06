@@ -4,21 +4,18 @@ package dial
 import (
 	"encoding/json"
 	"fmt"
+	"time"
 
+	"github.com/nID-sourcecode/nid-core/pkg/utilities/errors"
+
+	"github.com/nID-sourcecode/nid-core/pkg/utilities/log/v2"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/connectivity"
-
-	"lab.weave.nl/nid/nid-core/pkg/utilities/errors"
-	"lab.weave.nl/nid/nid-core/pkg/utilities/log/v2"
 )
 
-// Error definitions
-var (
-	ErrNotConnected            = errors.New("not connected")
-	ErrInvalidFloatValue       = errors.New("unable to convert value")
-	ErrUnkownConnectivityState = errors.New("unknown connectivity state")
-)
+// ErrNotConnected not connected
+var ErrNotConnected = errors.New("not connected")
 
 const (
 	defaultMaxAttempts       = 4
@@ -34,12 +31,12 @@ type MethodConfig struct {
 	RetryPolicy  *RetryPolicy    `json:"retryPolicy"`
 }
 
-// MethodService specifies the grpc service or method the config should be applied to
+// MethodService specifies the grpc service or method the config should be applied to.
 type MethodService struct {
 	Service string `json:"service"`
 }
 
-// RetryPolicy specifies the policy to apply when trying to connect to a gRPC Service
+// RetryPolicy specifies the policy to apply when trying to connect to a gRPC Service.
 type RetryPolicy struct {
 	MaxAttempts          int              `json:"MaxAttempts"`
 	InitialBackoff       BackOffInSeconds `json:"InitialBackoff"`
@@ -48,7 +45,7 @@ type RetryPolicy struct {
 	RetryableStatusCodes []codes.Code     `json:"RetryableStatusCodes"`
 }
 
-// BackOffInSeconds is the backoff time in seconds as float32
+// BackOffInSeconds is the backoff time in seconds as float32.
 type BackOffInSeconds float32
 
 // MarshalJSON will convert the long int value to a string with a 's' appended
@@ -89,16 +86,19 @@ func Service(service string, dialOptions ...grpc.DialOption) (*grpc.ClientConn, 
 		return conn, errors.Wrap(err, "unable to dial the service")
 	}
 
-	switch conn.GetState() {
-	case connectivity.Ready:
-		log.Warnf("Connected with %s, state: %s which should not be the initial state", service, conn.GetState().String())
-		return conn, nil
-	case connectivity.Shutdown, connectivity.Connecting, connectivity.TransientFailure:
-		log.Warnf("Not connected with %s, state: %s", service, conn.GetState().String())
-		return conn, ErrNotConnected
-	case connectivity.Idle:
-		return conn, nil
-	default:
-		return conn, errors.Wrapf(ErrUnkownConnectivityState, "%s for %s", conn.GetState().String(), service)
+	maxRetries := 100
+	for conn.GetState() == connectivity.Connecting && maxRetries > 0 {
+		log.Infof("Dialling %s ....", service)
+		maxRetries--
+
+		time.Sleep(time.Second)
 	}
+
+	state := conn.GetState()
+	// https://grpc.github.io/grpc/core/md_doc_connectivity-semantics-and-api.html
+	if state != connectivity.Ready && state != connectivity.Idle {
+		return conn, errors.Wrapf(ErrNotConnected, "%s for %s", conn.GetState().String(), service)
+	}
+
+	return conn, nil
 }

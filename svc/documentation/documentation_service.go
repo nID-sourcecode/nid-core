@@ -7,18 +7,19 @@ import (
 	"strings"
 	"time"
 
-	"github.com/golang/protobuf/ptypes/empty"
+	"google.golang.org/protobuf/types/known/emptypb"
+
 	"github.com/xanzy/go-gitlab"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"lab.weave.nl/nid/nid-core/pkg/utilities/errors"
-	grpcerrors "lab.weave.nl/nid/nid-core/pkg/utilities/grpcserver/errors"
-	"lab.weave.nl/nid/nid-core/pkg/utilities/grpcserver/servicebase"
-	"lab.weave.nl/nid/nid-core/pkg/utilities/log/v2"
-	"lab.weave.nl/nid/nid-core/pkg/utilities/objectstorage"
-	"lab.weave.nl/nid/nid-core/svc/documentation/packages/git"
-	pb "lab.weave.nl/nid/nid-core/svc/documentation/proto"
+	"github.com/nID-sourcecode/nid-core/pkg/utilities/errors"
+	grpcerrors "github.com/nID-sourcecode/nid-core/pkg/utilities/grpcserver/errors"
+	"github.com/nID-sourcecode/nid-core/pkg/utilities/grpcserver/servicebase"
+	"github.com/nID-sourcecode/nid-core/pkg/utilities/log/v2"
+	"github.com/nID-sourcecode/nid-core/pkg/utilities/objectstorage"
+	"github.com/nID-sourcecode/nid-core/svc/documentation/packages/git"
+	pb "github.com/nID-sourcecode/nid-core/svc/documentation/proto"
 )
 
 // DefaultSignedURLExpTime default signed url expiration time
@@ -91,7 +92,7 @@ func (s *DocumentationServiceServer) ListDirectoryFiles(ctx context.Context, req
 }
 
 // ListRepositoryRefs fetches branches and tags for repository
-func (s *DocumentationServiceServer) ListRepositoryRefs(ctx context.Context, req *empty.Empty) (*pb.ListRepositoryRefsResponse, error) {
+func (s *DocumentationServiceServer) ListRepositoryRefs(ctx context.Context, _ *emptypb.Empty) (*pb.ListRepositoryRefsResponse, error) {
 	// Fetch tags for git project id
 	tags, resp, err := s.git.Tags().ListTags(s.conf.GitlabProjectIdentifier, nil, nil)
 	code := s.DocumentationErrHandler(ctx, resp, err)

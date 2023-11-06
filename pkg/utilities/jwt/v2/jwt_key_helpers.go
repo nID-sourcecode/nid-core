@@ -4,25 +4,25 @@ import (
 	"crypto/rsa"
 	"fmt"
 
-	jwtgo "github.com/dgrijalva/jwt-go"
+	jwtgo "github.com/golang-jwt/jwt/v5"
 
-	"lab.weave.nl/nid/nid-core/pkg/utilities/errors"
+	"github.com/nID-sourcecode/nid-core/pkg/utilities/errors"
 )
 
 // error declarations
 var (
-	ErrJWTPrivateNotFound error = fmt.Errorf("jwt private key not provided")
-	ErrJWTPublicNotFound  error = fmt.Errorf("jwt public key not provided")
+	errJWTPrivateNotFound = fmt.Errorf("jwt private key not provided")
+	errJWTPublicNotFound  = fmt.Errorf("jwt public key not provided")
 )
 
 // ParseKeys parse priv pub key pair as bytes
 // Deprecated: use ParseKey
 func ParseKeys(jwtKey, jwtPub []byte) (*rsa.PrivateKey, *rsa.PublicKey, error) {
 	if len(jwtKey) == 0 {
-		return nil, nil, ErrJWTPrivateNotFound
+		return nil, nil, errJWTPrivateNotFound
 	}
 	if len(jwtPub) == 0 {
-		return nil, nil, ErrJWTPublicNotFound
+		return nil, nil, errJWTPublicNotFound
 	}
 	keyParsed, err := jwtgo.ParseRSAPrivateKeyFromPEM(jwtKey)
 	if err != nil {
@@ -39,7 +39,7 @@ func ParseKeys(jwtKey, jwtPub []byte) (*rsa.PrivateKey, *rsa.PublicKey, error) {
 // ParseKey parses an RSA key encoded as pem
 func ParseKey(jwtKey []byte) (*rsa.PrivateKey, error) {
 	if len(jwtKey) == 0 {
-		return nil, ErrJWTPrivateNotFound
+		return nil, errJWTPrivateNotFound
 	}
 	keyParsed, err := jwtgo.ParseRSAPrivateKeyFromPEM(jwtKey)
 	if err != nil {

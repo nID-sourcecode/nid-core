@@ -7,7 +7,7 @@ import (
 
 	"github.com/machinebox/graphql"
 
-	"lab.weave.nl/nid/nid-core/pkg/utilities/errors"
+	"github.com/nID-sourcecode/nid-core/pkg/utilities/errors"
 )
 
 const introspectionQuery = `{
@@ -95,7 +95,7 @@ type SchemaFetcher interface {
 
 // GQLClient makes the Run function of the gql client testable
 type GQLClient interface {
-	// executes gql query on gqlClient
+	// Run executes gql query on gqlClient
 	Run(ctx context.Context, req *graphql.Request, resp interface{}) error
 }
 

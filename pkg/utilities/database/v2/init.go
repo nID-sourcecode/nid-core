@@ -2,9 +2,11 @@
 package database
 
 import (
+	"database/sql"
 	"fmt"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/jinzhu/gorm"
@@ -12,7 +14,7 @@ import (
 	// Postgres driver
 	_ "github.com/lib/pq"
 
-	"lab.weave.nl/nid/nid-core/pkg/utilities/log/v2"
+	"github.com/nID-sourcecode/nid-core/pkg/utilities/log/v2"
 )
 
 // database constants
@@ -26,7 +28,7 @@ const (
 	defaultPort          = 5432
 	defaultRetryDuration = 500 * time.Millisecond
 
-	// Different test modes for db
+	// TestModeOff Different test modes for db
 	TestModeOff         TestMode = 1
 	TestModeDropTables  TestMode = 2
 	TestModeNoDropTable TestMode = 3
@@ -69,37 +71,13 @@ type DBConfig struct {
 	SSLMode         string
 }
 
-// CreateDefaultDBConfig creates a default postgres configuration
-func CreateDefaultDBConfig() *DBConfig {
-	return &DBConfig{
-		RetryOnFailure: false,
-		TestMode:       TestModeOff,
-		Port:           defaultPort,
-		AutoMigrate:    true,
-		Extensions:     CreateDefaultExtensionConfig(),
-		SSLMode:        "disable",
-	}
-}
-
-// CreateIstioDBConfig creates a default istio cluster postgres configuration
-func CreateIstioDBConfig() *DBConfig {
-	return &DBConfig{
-		RetryOnFailure: true,
-		TestMode:       TestModeOff,
-		Port:           defaultPort,
-		TimeOut:        defaultTimeout,
-		AutoMigrate:    true,
-		Extensions:     CreateDefaultExtensionConfig(),
-		SSLMode:        "disable",
-	}
-}
-
 // CreateTestDBConfig creates desired test DB configuration
 func CreateTestDBConfig() *DBConfig {
 	return &DBConfig{
 		RetryOnFailure: true,
 		TestMode:       TestModeNoDropTable,
 		Port:           defaultPort,
+		Pass:           "postgres",
 		TimeOut:        defaultTimeout,
 		AutoMigrate:    true,
 		Extensions:     CreateDefaultExtensionConfig(),
@@ -113,23 +91,6 @@ func setDefaultOptions(db *gorm.DB) *gorm.DB {
 	db.DB().SetMaxIdleConns(DefaultIdleConns)
 	db.DB().SetConnMaxLifetime(DefaultConnLifetimeDuration)
 	return db
-}
-
-// MustConnectDefault create must connection for default cluster
-func MustConnectDefault(dbName string, models []interface{}) *gorm.DB {
-	db, err := ConnectDefault(dbName, models)
-	if err != nil {
-		panic(err)
-	}
-	return setDefaultOptions(db)
-}
-
-// ConnectDefault create connection for default cluster
-func ConnectDefault(dbName string, models []interface{}) (*gorm.DB, error) {
-	config := CreateDefaultDBConfig()
-	config.DBName = dbName
-	client := NewClientFromConfig(config)
-	return client.InitDB(models)
 }
 
 // MustConnectTest must connection for running tests
@@ -147,22 +108,6 @@ func ConnectTest(dbName string, models []interface{}) (*gorm.DB, error) {
 	config.DBName = dbName
 	client := NewClientFromConfig(config)
 	return client.InitDB(models)
-}
-
-// MustConnectIstio must connection for istio cluster
-func MustConnectIstio(dbName string, models []interface{}) *gorm.DB {
-	db, err := ConnectIstio(dbName, models)
-	if err != nil {
-		panic(err)
-	}
-	return setDefaultOptions(db)
-}
-
-// ConnectIstio connection for istio cluster
-func ConnectIstio(dbName string, models []interface{}) (*gorm.DB, error) {
-	config := CreateIstioDBConfig()
-	config.DBName = dbName
-	return ConnectCustom(config, models)
 }
 
 // MustConnectCustom must connect custom database connection with specified config
@@ -200,6 +145,30 @@ func NewClientFromConfig(config *DBConfig) PostgresClient {
 	client.evalEnvironment()
 	client.ensureDefaults()
 	return client
+}
+
+// CreateTestDatabase Creates a database in postgres.
+func CreateTestDatabase(name string) error {
+	conf := CreateTestDBConfig()
+	conf.Host = "localhost"
+	conf.User = "postgres"
+	conf.TestMode = TestModeOff
+
+	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s password=%s sslmode=disable",
+		conf.Host, conf.Port, conf.User, conf.Pass)
+
+	var db *sql.DB
+	db, err := sql.Open("postgres", psqlInfo)
+	if err != nil {
+		panic(err)
+	}
+
+	_, err = db.Exec(fmt.Sprintf("CREATE DATABASE %s_test;", name))
+	if err != nil && !strings.Contains(err.Error(), fmt.Sprintf("database \"%s_test\" already exists", name)) {
+		return err
+	}
+
+	return nil
 }
 
 // PostgresClient client for connecting to postgres

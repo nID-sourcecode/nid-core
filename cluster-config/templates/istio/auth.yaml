@@ -245,6 +245,23 @@ spec:
 apiVersion: security.istio.io/v1beta1
 kind: AuthorizationPolicy
 metadata:
+  name: allow-getbsn-internal-filters
+spec:
+  selector:
+    matchLabels:
+      app: wallet-rpc
+  action: ALLOW
+  rules:
+    - from:
+        - source:
+            principals: ["cluster.local/ns/{{ .Release.Namespace }}/sa/nidfilter"]
+      to:
+        - operation:
+            paths: ["/wallet.Wallet/GetBSNForPseudonym"]
+---
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
   name: allow-public-wallet
 spec:
   selector:

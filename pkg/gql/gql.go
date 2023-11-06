@@ -7,7 +7,7 @@ import (
 
 	"github.com/go-resty/resty/v2"
 
-	"lab.weave.nl/nid/nid-core/pkg/utilities/errors"
+	"github.com/nID-sourcecode/nid-core/pkg/utilities/errors"
 )
 
 var (
@@ -29,9 +29,11 @@ const (
 
 // Client graphql client interface
 type Client interface {
-	// executes gql query on gqlClient
+	// Post executes gql query on gqlClient
 	Post(ctx context.Context, req Request, resp interface{}) error // Defaults to POST
+	// Get executes gql query on gqlClient
 	Get(ctx context.Context, req Request, resp interface{}) error
+	// Run executes gql query on gqlClient
 	Run(ctx context.Context, req Request, resp interface{}, method Method) error
 }
 

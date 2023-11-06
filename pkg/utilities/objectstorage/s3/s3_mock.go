@@ -24,7 +24,7 @@ func (m *s3ClientMock) StatObject(ctx context.Context, s2, s3 string, options mi
 	return args.Get(0).(minio.ObjectInfo), args.Error(1)
 }
 
-// We implement an interface therefore we cannot make options a pointer
+// PutObject We implement an interface therefore we cannot make options a pointer
 func (m *s3ClientMock) PutObject(ctx context.Context, s2, s3 string, reader io.Reader, i int64, options minio.PutObjectOptions) (minio.UploadInfo, error) {
 	args := m.Called(ctx, s2, s3, reader, i, options)
 	return args.Get(0).(minio.UploadInfo), args.Error(1)

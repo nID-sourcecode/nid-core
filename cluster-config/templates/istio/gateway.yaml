@@ -8,13 +8,21 @@ spec:
     istio: ingressgateway
   servers:
     - port:
+        number: 8080
+        name: http8080
+        protocol: HTTP2
+      hosts:
+      {{- range  .Values.gateway.domains }}
+        - {{ . | quote }}
+      {{- end}}
+    - port:
         number: 80
         name: http
         protocol: HTTP2
       hosts:
       {{- range  .Values.gateway.domains }}
       - {{ . | quote }}
-        {{- end}}
+      {{- end}}
     {{- if .Values.gateway.https }}
       tls:
         httpsRedirect: true # sends 301 redirect for http requests

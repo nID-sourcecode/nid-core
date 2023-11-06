@@ -1,23 +1,19 @@
 package luautil
 
 import (
-	"context"
-
+	"github.com/nID-sourcecode/nid-core/pkg/utilities/log/v2"
+	auth "github.com/nID-sourcecode/nid-core/svc/auth/transport/grpc/proto"
 	lua "github.com/yuin/gopher-lua"
-
-	"lab.weave.nl/nid/nid-core/pkg/utilities/log/v2"
-	auth "lab.weave.nl/nid/nid-core/svc/auth/proto"
 )
 
 // HeadlessAuthCaller handles the authentication for the lua script.
 type HeadlessAuthCaller struct {
-	authClient auth.AuthClient
-	ctx        context.Context
+	authClient *auth.AuthClient
 }
 
 // NewHeadlessAuthCaller returns a new instance of NewHeadlessAuthCaller
-func NewHeadlessAuthCaller(ctx context.Context, authClient auth.AuthClient) *HeadlessAuthCaller {
-	return &HeadlessAuthCaller{authClient: authClient, ctx: ctx}
+func NewHeadlessAuthCaller(authClient *auth.AuthClient) *HeadlessAuthCaller {
+	return &HeadlessAuthCaller{authClient: authClient}
 }
 
 const (
@@ -30,7 +26,7 @@ const (
 
 // Call implements the Call method for lua state. HeadlessAuthCaller handles the headless authorization.
 func (h *HeadlessAuthCaller) Call(state *lua.LState) int {
-	_, err := h.authClient.AuthorizeHeadless(h.ctx, &auth.AuthorizeHeadlessRequest{
+	_, err := (*h.authClient).AuthorizeHeadless(state.Context(), &auth.AuthorizeHeadlessRequest{
 		ResponseType:   "code",
 		ClientId:       state.ToString(clientIDIndex),
 		RedirectUri:    state.ToString(redirectURLIndex),
@@ -38,10 +34,8 @@ func (h *HeadlessAuthCaller) Call(state *lua.LState) int {
 		QueryModelJson: state.ToString(modelJSON),
 		QueryModelPath: state.ToString(modelPath),
 	})
-
-	log.WithError(err).Errorln("running authorize headless")
-
 	if err != nil {
+		log.WithError(err).Errorln("running authorize headless")
 		return 0
 	}
 

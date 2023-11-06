@@ -10,14 +10,16 @@ import (
 	grpc_recovery "github.com/grpc-ecosystem/go-grpc-middleware/recovery"
 	grpc_ctxtags "github.com/grpc-ecosystem/go-grpc-middleware/tags"
 	grpc_validator "github.com/grpc-ecosystem/go-grpc-middleware/validator"
+
+	//nolint:gomodguard //needed for backwards compatibility
 	log "github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/health"
 	healthpb "google.golang.org/grpc/health/grpc_health_v1"
 	"google.golang.org/grpc/reflection"
 
-	"lab.weave.nl/nid/nid-core/pkg/utilities/grpcserver/logfields"
-	"lab.weave.nl/nid/nid-core/pkg/utilities/grpcserver/loggrpc"
+	"github.com/nID-sourcecode/nid-core/pkg/utilities/grpcserver/logfields"
+	"github.com/nID-sourcecode/nid-core/pkg/utilities/grpcserver/loggrpc"
 )
 
 // ServiceRegistry service registry can be implemented to register custom
@@ -30,16 +32,17 @@ type ServiceRegistry interface {
 type DefaultServiceRegistry struct{}
 
 // RegisterServices by default no services are registered
-func (d DefaultServiceRegistry) RegisterServices(grpcServer *grpc.Server) {}
+func (d DefaultServiceRegistry) RegisterServices(_ *grpc.Server) {}
 
 // InitDefault initialises the grpc server with default config
 func InitDefault(serviceRegistry ServiceRegistry) error {
 	conf := NewDefaultConfig()
-	return InitWithConf(serviceRegistry, conf)
+	return InitWithConf(serviceRegistry, &conf)
 }
 
 // InitWithConf initialises the grpc server with custom interceptor
-func InitWithConf(serviceRegistry ServiceRegistry, conf Config) error {
+func InitWithConf(serviceRegistry ServiceRegistry, conf *Config) error {
+	log.SetFormatter(conf.LogFormatter)
 	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", conf.Port))
 	if err != nil {
 		log.WithError(err).WithField(logfields.Port, conf.Port).Error("failed to listen")
@@ -83,7 +86,9 @@ func InitWithConf(serviceRegistry ServiceRegistry, conf Config) error {
 	grpcServer := grpc.NewServer(
 		grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(
 			append(interceptors, conf.AdditionalInterceptors...)...,
-		)))
+		)),
+
+		grpc.StreamInterceptor(grpc_middleware.ChainStreamServer(conf.AdditionalStreamServerInterceptor...)))
 
 	go HandleSigGracefulShutdown(grpcServer)
 	healthpb.RegisterHealthServer(grpcServer, health.NewServer())

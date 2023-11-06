@@ -9,9 +9,9 @@ import (
 	"net/http"
 	"time"
 
-	"lab.weave.nl/nid/nid-core/pkg/utilities/errors"
-	"lab.weave.nl/nid/nid-core/pkg/utilities/log/v2"
-	"lab.weave.nl/nid/nid-core/svc/wallet-gql/models"
+	"github.com/nID-sourcecode/nid-core/pkg/utilities/errors"
+	"github.com/nID-sourcecode/nid-core/pkg/utilities/log/v2"
+	"github.com/nID-sourcecode/nid-core/svc/wallet-gql/models"
 )
 
 // AuthorizationURI Contains the uri for the authorization service
@@ -19,10 +19,7 @@ import (
 // nolint: gochecknoglobals
 var AuthorizationURI string
 
-// error definitions
-var (
-	ErrUnableToRevokeConsent error = fmt.Errorf("unable to revoke consent")
-)
+var errUnableToRevokeConsent = fmt.Errorf("unable to revoke consent")
 
 func (r *mutationResolver) CreateRevokeConsent(ctx context.Context, input CreateRevokeConsent) (*RevokeConsent, error) {
 	var consent models.Consent
@@ -78,7 +75,7 @@ func (r *mutationResolver) CreateRevokeConsent(ctx context.Context, input Create
 			"returned status code: %v, with error: [%v] and error description: [%v]",
 			errorResp.Code, errorResp.Name, errorResp.Description)
 
-		return nil, ErrUnableToRevokeConsent
+		return nil, errUnableToRevokeConsent
 	}
 
 	if err := r.DB.Save(&consent).Error; err != nil {

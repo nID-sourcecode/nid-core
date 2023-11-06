@@ -6,8 +6,8 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	"lab.weave.nl/nid/nid-core/pkg/accessmodel"
-	"lab.weave.nl/nid/nid-core/pkg/utilities/errors"
+	"github.com/nID-sourcecode/nid-core/pkg/accessmodel"
+	"github.com/nID-sourcecode/nid-core/pkg/utilities/errors"
 )
 
 type RESTVerifierTestSuite struct {

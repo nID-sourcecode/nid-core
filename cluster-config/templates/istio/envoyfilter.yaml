@@ -3,7 +3,6 @@ apiVersion: networking.istio.io/v1alpha3
 kind: EnvoyFilter
 metadata:
   name: ext-proc-filter-databron
-  namespace: nid
 spec:
   workloadSelector:
     labels:
@@ -22,31 +21,29 @@ spec:
         operation: INSERT_BEFORE
         value:
           name: envoy.filters.http.ext_proc
-          typed_config:
-            "@type": type.googleapis.com/envoy.extensions.filters.http.ext_proc.v3alpha.ExternalProcessor
-            grpc_service:
-              envoy_grpc:
-                cluster_name: "outbound|80||nid-filter.{{.Release.Namespace}}.svc.cluster.local"
-                authority: "nid-filter.{{.Release.Namespace}}"
-              initial_metadata:
-                - key: "x-selected-filters"
-                  value: "scopeverification,autopseudo,autobsn,auditlog"
-            failure_mode_allow: false
-            processing_mode:
-              request_header_mode: "SEND"
-              response_header_mode: "SEND"
-              request_body_mode: "BUFFERED"
-              response_body_mode: "BUFFERED"
-              request_trailer_mode: "SKIP"
-              response_trailer_mode: "SKIP"
-            message_timeout: 5s
+          "@type": type.googleapis.com/envoy.extensions.filters.http.ext_proc.v3.ExternalProcessor
+          grpc_service:
+            envoy_grpc:
+              cluster_name: "outbound|80||nid-filter.{{.Release.Namespace}}.svc.cluster.local"
+              authority: "nid-filter.{{.Release.Namespace}}"
+            initial_metadata:
+              - key: "x-selected-filters"
+                value: "auditlog"
+          failure_mode_allow: false
+          processing_mode:
+            request_header_mode: "SEND"
+            response_header_mode: "SEND"
+            request_body_mode: "BUFFERED"
+            response_body_mode: "BUFFERED"
+            request_trailer_mode: "SKIP"
+            response_trailer_mode: "SKIP"
+          message_timeout: 5s
 ---
 {{- end}}
 apiVersion: networking.istio.io/v1alpha3
 kind: EnvoyFilter
 metadata:
   name: ext-proc-filter-incoming-datasource
-  namespace: nid
 spec:
   workloadSelector:
     labels:
@@ -66,14 +63,14 @@ spec:
         value:
           name: envoy.filters.http.ext_proc
           typed_config:
-            "@type": type.googleapis.com/envoy.extensions.filters.http.ext_proc.v3alpha.ExternalProcessor
+            "@type": type.googleapis.com/envoy.extensions.filters.http.ext_proc.v3.ExternalProcessor
             grpc_service:
               envoy_grpc:
                 cluster_name: "outbound|80||nid-filter.{{.Release.Namespace}}.svc.cluster.local"
                 authority: "nid-filter.{{.Release.Namespace}}"
               initial_metadata:
                 - key: "x-selected-filters"
-                  value: "auditlog,scopeverification,autopseudo"
+                  value: "auditlog"
             failure_mode_allow: false
             processing_mode:
               request_header_mode: "SEND"
@@ -88,7 +85,6 @@ apiVersion: networking.istio.io/v1alpha3
 kind: EnvoyFilter
 metadata:
   name: ext-proc-filter-outgoing-info
-  namespace: nid
 spec:
   workloadSelector:
     labels:
@@ -108,7 +104,7 @@ spec:
         value:
           name: envoy.filters.http.ext_proc
           typed_config:
-            "@type": type.googleapis.com/envoy.extensions.filters.http.ext_proc.v3alpha.ExternalProcessor
+            "@type": type.googleapis.com/envoy.extensions.filters.http.ext_proc.v3.ExternalProcessor
             grpc_service:
               envoy_grpc:
                 cluster_name: "outbound|80||nid-filter.{{.Release.Namespace}}.svc.cluster.local" # FIXME make sure nid-filter is applied per namespace
@@ -126,3 +122,73 @@ spec:
               response_trailer_mode: "SKIP"
             message_timeout: 5s
 ---
+{{- if (and .Values.gateway.mtls.enabled .Values.luarunner.subjectcn)  }}
+apiVersion: networking.istio.io/v1alpha3
+kind: EnvoyFilter
+metadata:
+  name: cn-checker
+  namespace: istio-system
+spec:
+  workloadSelector:
+    labels:
+      istio: ingressgateway
+  configPatches:
+  - applyTo: HTTP_FILTER
+    match:
+      context: GATEWAY
+      listener:
+        filterChain:
+          filter:
+            name: "envoy.http_connection_manager"
+            subFilter:
+              name: "envoy.router"
+    patch:
+      operation: INSERT_BEFORE
+      value:
+        name: envoy.lua
+        typed_config:
+          "@type": "type.googleapis.com/envoy.extensions.filters.http.lua.v3.Lua"
+          inlineCode: |
+            function envoy_on_request(request_handle)
+              -- Placeholder
+            end
+  - applyTo: HTTP_ROUTE
+    match:
+      context: GATEWAY
+      routeConfiguration:
+        vhost:
+          route:
+            name: luarunner # Corresponds to http[0].name in VirtualService
+    patch:
+      operation: MERGE
+      value:
+        name: envoy.lua
+        typed_per_filter_config:
+          envoy.filters.http.lua:
+            '@type': type.googleapis.com/envoy.extensions.filters.http.lua.v3.LuaPerRoute
+            source_code:
+              inline_string: |
+                function envoy_on_request(request_handle)
+                  if request_handle:connection():ssl() then
+                    ALLOWED_CN = "{{ .Values.luarunner.subjectcn }}"
+                    CN = ""
+                    for str in string.gmatch(request_handle:connection():ssl():subjectPeerCertificate(), "([^,]+)") do
+                      key = ""
+                      for keyval in string.gmatch(str, "([^=]+)") do
+                        if key == "CN" then
+                          CN = keyval
+                          break
+                        end
+                        key = keyval
+                      end                      
+                    end
+                    if ALLOWED_CN ~= CN then
+                      request_handle:logInfo("Deny access, CN not allowed:"..CN)
+                      request_handle:respond(
+                        {[":status"] = "403"},
+                        "Access denied, CN not allowed") 
+                    end
+                  end
+                end
+---
+{{- end }}

@@ -8,8 +8,12 @@ import (
 	"strings"
 	"time"
 
+	"google.golang.org/protobuf/types/known/emptypb"
+
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
+
 	"github.com/golang/protobuf/ptypes/duration"
-	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/machinebox/graphql"
 	networkingv1beta1 "istio.io/api/networking/v1beta1"
 	security "istio.io/api/security/v1beta1"
@@ -22,11 +26,11 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 
-	"lab.weave.nl/nid/nid-core/pkg/utilities/errors"
-	grpcerrors "lab.weave.nl/nid/nid-core/pkg/utilities/grpcserver/errors"
-	"lab.weave.nl/nid/nid-core/pkg/utilities/log/v2"
-	"lab.weave.nl/nid/nid-core/svc/dashboard/kubeutil"
-	"lab.weave.nl/nid/nid-core/svc/dashboard/proto"
+	"github.com/nID-sourcecode/nid-core/pkg/utilities/errors"
+	grpcerrors "github.com/nID-sourcecode/nid-core/pkg/utilities/grpcserver/errors"
+	"github.com/nID-sourcecode/nid-core/pkg/utilities/log/v2"
+	"github.com/nID-sourcecode/nid-core/svc/dashboard/kubeutil"
+	"github.com/nID-sourcecode/nid-core/svc/dashboard/proto"
 )
 
 // ErrInvalidNamespace is returned when an operation on the specified namespace is not allowed (operations on kube-system for example)
@@ -176,7 +180,7 @@ func (s *DashboardServiceServer) createAutoPseudoIfNotExists(ctx context.Context
 }
 
 // ListNamespaces lists all namespaces for current kube client set
-func (s *DashboardServiceServer) ListNamespaces(ctx context.Context, in *empty.Empty) (*proto.NamespaceList, error) {
+func (s *DashboardServiceServer) ListNamespaces(ctx context.Context, _ *emptypb.Empty) (*proto.NamespaceList, error) {
 	namespaces, err := s.kubeutil.ListNamespace(ctx)
 	if err != nil {
 		log.Extract(ctx).WithError(err).Error("unable to list namesapces")
@@ -336,10 +340,10 @@ func (s *DashboardServiceServer) DeployService(ctx context.Context, req *proto.D
 }
 
 // DeleteService deletes a service in a given namespace
-func (s *DashboardServiceServer) DeleteService(ctx context.Context, req *proto.DeleteServiceRequest) (*empty.Empty, error) {
+func (s *DashboardServiceServer) DeleteService(ctx context.Context, req *proto.DeleteServiceRequest) (*emptypb.Empty, error) {
 	err := s.validateNamespace(req.GetNamespace(), true)
 	if err != nil {
-		return nil, grpcerrors.ErrInvalidArgument(strings.Title(err.Error()))
+		return nil, grpcerrors.ErrInvalidArgument(cases.Title(language.English, cases.NoLower).String(err.Error()))
 	}
 
 	err = s.kubeutil.DeleteService(ctx, req.GetNamespace(), req.GetName())
@@ -349,14 +353,14 @@ func (s *DashboardServiceServer) DeleteService(ctx context.Context, req *proto.D
 		return nil, grpcerrors.ErrInternalServer()
 	}
 
-	return &empty.Empty{}, nil
+	return &emptypb.Empty{}, nil
 }
 
 // ListServices lists services for a given namespace
 func (s *DashboardServiceServer) ListServices(ctx context.Context, req *proto.ListServiceRequest) (*proto.ServiceList, error) {
 	err := s.validateNamespace(req.GetNamespace(), false)
 	if err != nil {
-		return nil, grpcerrors.ErrInvalidArgument(strings.Title(err.Error()))
+		return nil, grpcerrors.ErrInvalidArgument(cases.Title(language.English, cases.NoLower).String(err.Error()))
 	}
 
 	svcs, err := s.kubeutil.ListService(ctx, req.GetNamespace())
@@ -381,8 +385,8 @@ func (s *DashboardServiceServer) ListServices(ctx context.Context, req *proto.Li
 	return resp, nil
 }
 
-func (s *DashboardServiceServer) validateNamespace(namespace string, delete bool) error {
-	if strings.HasPrefix(namespace, "kube") || strings.HasPrefix(namespace, "istio") || namespace == "default" || (delete && namespace == s.config.Namespace) {
+func (s *DashboardServiceServer) validateNamespace(namespace string, deleteService bool) error {
+	if strings.HasPrefix(namespace, "kube") || strings.HasPrefix(namespace, "istio") || namespace == "default" || (deleteService && namespace == s.config.Namespace) {
 		return errors.Wrap(ErrInvalidNamespace, "unexpected namespace")
 	}
 

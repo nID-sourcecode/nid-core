@@ -93,7 +93,7 @@ func NewNopeScope() Scope {
 }
 
 // MustRegister registers given prometheus collector on scope registerer
-func (s *NopeScope) MustRegister(collectors ...prometheus.Collector) {
+func (s *NopeScope) MustRegister(_ ...prometheus.Collector) {
 }
 
 // RegisterNewCounterVector creates and registers new counter vector
@@ -118,7 +118,7 @@ func (s *NopeScope) RegisterNewGaugeVector(name, help string, labels []string) *
 }
 
 // RegisterNewHistogramVector create and registers a new histogram
-func (s *NopeScope) RegisterNewHistogramVector(buckets Buckets, name, help string, labels []string) *prometheus.HistogramVec {
+func (s *NopeScope) RegisterNewHistogramVector(_ Buckets, name, help string, labels []string) *prometheus.HistogramVec {
 	vec := prometheus.NewHistogramVec(
 		prometheus.HistogramOpts{
 			Name: name,

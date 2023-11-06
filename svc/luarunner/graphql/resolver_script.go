@@ -11,7 +11,7 @@ import (
 	"github.com/gofrs/uuid"
 	"github.com/jinzhu/gorm"
 	"github.com/pkg/errors"
-	"lab.weave.nl/nid/nid-core/svc/luarunner/models"
+	"github.com/nID-sourcecode/nid-core/svc/luarunner/models"
 	generr "lab.weave.nl/weave/generator/pkg/errors"
 	"lab.weave.nl/weave/generator/utils/database"
 	"lab.weave.nl/weave/generator/utils/mutation"

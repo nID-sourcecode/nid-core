@@ -9,16 +9,14 @@ import (
 
 	"github.com/dvsekhvalnov/jose2go/base64url"
 
-	"lab.weave.nl/nid/nid-core/pkg/extproc/filter"
-	"lab.weave.nl/nid/nid-core/pkg/utilities/errors"
-	grpcerrors "lab.weave.nl/nid/nid-core/pkg/utilities/grpcserver/errors"
-	"lab.weave.nl/nid/nid-core/pkg/utilities/log/v2"
+	"github.com/nID-sourcecode/nid-core/pkg/extproc/filter"
+	"github.com/nID-sourcecode/nid-core/pkg/utilities/errors"
+	grpcerrors "github.com/nID-sourcecode/nid-core/pkg/utilities/grpcserver/errors"
+	"github.com/nID-sourcecode/nid-core/pkg/utilities/log/v2"
 )
 
-// Error definitions
-var (
-	ErrHeaderNotSpecified = errors.New("header not specified")
-)
+// ErrHeaderNotSpecified headers not specified error
+var ErrHeaderNotSpecified = errors.New("header not specified")
 
 // FilterInitializer is responseible for creating new filters
 type FilterInitializer struct {
@@ -48,7 +46,7 @@ type Filter struct {
 }
 
 // OnHTTPRequest processes a single HTTP request
-func (f *Filter) OnHTTPRequest(ctx context.Context, body []byte, headers map[string]string) (*filter.ProcessingResponse, error) {
+func (f *Filter) OnHTTPRequest(_ context.Context, body []byte, headers map[string]string) (*filter.ProcessingResponse, error) {
 	var token string
 	authHeader, ok := headers["authorization"]
 	if ok {
@@ -64,31 +62,35 @@ func (f *Filter) OnHTTPRequest(ctx context.Context, body []byte, headers map[str
 
 	host, ok := headers[":authority"]
 	if !ok {
+		log.WithError(ErrHeaderNotSpecified).Errorf("tried getting authority from headers")
 		return nil, errors.Errorf("%w: :authority", ErrHeaderNotSpecified)
 	}
 	path, ok := headers[":path"]
 	if !ok {
+		log.WithError(ErrHeaderNotSpecified).Errorf("tried getting path from headers")
 		return nil, errors.Errorf("%w: :path", ErrHeaderNotSpecified)
 	}
 	method, ok := headers[":method"]
 	if !ok {
+		log.WithError(ErrHeaderNotSpecified).Errorf("tried getting method from headers")
 		return nil, errors.Errorf("%w: :method", ErrHeaderNotSpecified)
 	}
 	f.requestID, ok = headers["x-request-id"]
 	if !ok {
+		log.WithError(ErrHeaderNotSpecified).Errorf("tried getting x-request-id from headers")
 		return nil, errors.Errorf("%w: x-request-id", ErrHeaderNotSpecified)
 	}
 
-	url, err := url.PathUnescape(host + path)
+	u, err := url.PathUnescape(host + path)
 	if err != nil {
-		log.WithField("url", url).WithError(err).Error("unable to unescape path")
+		log.WithField("url", u).WithError(err).Error("unable to unescape path")
 		return nil, grpcerrors.ErrInvalidArgument("url not pathunescapable")
 	}
 
 	f.logger.WithFields(log.Fields{
 		// Just print the claims as an object, let the log formatter handle the formatting
 		"token":       claims,
-		"url":         url,
+		"url":         u,
 		"body":        string(body),
 		"http_method": method,
 		"request_id":  f.requestID,
@@ -98,7 +100,7 @@ func (f *Filter) OnHTTPRequest(ctx context.Context, body []byte, headers map[str
 }
 
 // OnHTTPResponse processes a single HTTP response
-func (f *Filter) OnHTTPResponse(ctx context.Context, body []byte, headers map[string]string) (*filter.ProcessingResponse, error) {
+func (f *Filter) OnHTTPResponse(_ context.Context, _ []byte, headers map[string]string) (*filter.ProcessingResponse, error) {
 	log.Infof("response headers: %+v", headers)
 	status, ok := headers[":status"]
 	if !ok {

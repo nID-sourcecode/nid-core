@@ -1,25 +1,38 @@
 // //go:generate env GO111MODULE=on GOBIN=$PWD/bin go install github.com/goadesign/goa/goagen
+// //go:generate env GO111MODULE=on GOBIN=$PWD/bin bin/goagen -d github.com/nID-sourcecode/nid-core/services/gqlciz/design gen --pkg-path=lab.weave.nl/weave/generator
+//
 //go:generate env GO111MODULE=on GOBIN=$PWD/bin go install lab.weave.nl/weave/generator/cmd/gen
-// //go:generate env GO111MODULE=on GOBIN=$PWD/bin bin/goagen -d lab.weave.nl/nid/nid-core/services/gqlciz/design gen --pkg-path=lab.weave.nl/weave/generator
-//go:generate env GO111MODULE=on GOBIN=$PWD/bin bin/gen lab.weave.nl/nid/nid-core/services/luarunner
+//go:generate env GO111MODULE=on GOBIN=$PWD/bin bin/gen github.com/nID-sourcecode/nid-core/services/luarunner
 package main
 
 import (
+	"context"
 	"fmt"
-	"net/http"
 	"strconv"
 	"time"
 
+	"google.golang.org/grpc/metadata"
+
+	"github.com/nID-sourcecode/nid-core/svc/luarunner/internal"
+
+	"google.golang.org/grpc/credentials/insecure"
+
+	"github.com/gin-gonic/gin"
 	"github.com/vrischmann/envconfig"
 	"google.golang.org/grpc"
 
-	"lab.weave.nl/nid/nid-core/pkg/environment"
-	"lab.weave.nl/nid/nid-core/pkg/utilities/database/v2"
-	"lab.weave.nl/nid/nid-core/pkg/utilities/grpcserver/dial"
-	"lab.weave.nl/nid/nid-core/pkg/utilities/log/v2"
-	authProto "lab.weave.nl/nid/nid-core/svc/auth/proto"
-	"lab.weave.nl/nid/nid-core/svc/luarunner/models"
+	"github.com/nID-sourcecode/nid-core/pkg/environment"
+	"github.com/nID-sourcecode/nid-core/pkg/httpserver"
+	"github.com/nID-sourcecode/nid-core/pkg/utilities/database/v2"
+	"github.com/nID-sourcecode/nid-core/pkg/utilities/grpcserver/dial"
+	"github.com/nID-sourcecode/nid-core/pkg/utilities/log/v2"
+	authProto "github.com/nID-sourcecode/nid-core/svc/auth/transport/grpc/proto"
+	"github.com/nID-sourcecode/nid-core/svc/luarunner/models"
 )
+
+type contextKeyType string
+
+const ctxB3Key = contextKeyType("B3Trace")
 
 func main() {
 	var config environment.BaseConfig
@@ -66,33 +79,54 @@ func main() {
 
 	models.AddForeignKeys(db)
 
-	luaRunnerDB := NewLuaRunnerDB(db)
+	luaRunnerDB := internal.NewLuaRunnerDB(db)
 	if err != nil {
 		log.WithError(err).Fatal("setting up luarunner database")
 	}
 
 	authClient := authProto.NewAuthClient(conn)
-	luaRunnerService := NewLuaRunnerService(authDB, authClient, luaRunnerDB)
+	luaRunnerService := internal.NewLuaRunnerService(authDB, &authClient, luaRunnerDB)
 
-	http.HandleFunc("/callback", func(w http.ResponseWriter, r *http.Request) {
-		luaRunnerService.HTTPCallback(w, r)
+	server := httpserver.NewGinServer()
+	server.Use(func(c *gin.Context) {
+		headers := c.Request.Header
+
+		ctx := context.WithValue(c.Request.Context(), ctxB3Key, map[string]string{
+			"x-b3-traceid":      headers["X-B3-Traceid"][0],
+			"x-b3-spanid":       headers["X-B3-Spanid"][0],
+			"x-b3-parentspanid": headers["X-B3-Parentspanid"][0],
+			"x-request-id":      headers["X-Request-Id"][0],
+		})
+
+		c.Request = c.Request.WithContext(ctx)
+		c.Next()
 	})
 
-	http.HandleFunc("/v1/health", func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusOK)
-		_, err := w.Write([]byte("ok"))
-		if err != nil {
-			log.Errorf("unable to return v1/health value, error: %s", err.Error())
-		}
+	server.POST("/callback", func(c *gin.Context) {
+		luaRunnerService.HTTPCallback(c.Writer, c.Request)
 	})
 
-	log.Infof("running on http://localhost:%d", config.Port)
-	log.Fatal(http.ListenAndServe(":"+strconv.Itoa(config.Port), nil))
+	server.POST("/:organisation/:script/run", luaRunnerService.Run)
+
+	err = server.Run(":" + strconv.Itoa(config.Port))
+	if err != nil {
+		panic(err)
+	}
 }
 
 func getGRPCClient(service string) (*grpc.ClientConn, error) {
-	var connection *grpc.ClientConn
-	connection, err := dial.Service(fmt.Sprintf("%s:80", service), grpc.WithInsecure())
+	return dial.Service(fmt.Sprintf("%s:8080", service), grpc.WithTransportCredentials(
+		insecure.NewCredentials()),
+		grpc.WithChainUnaryInterceptor(
+			func(ctx context.Context, method string, req, reply interface{}, cc *grpc.ClientConn, invoker grpc.UnaryInvoker, opts ...grpc.CallOption) error {
+				b3Trace := ctx.Value(ctxB3Key).(map[string]string)
 
-	return connection, err
+				for k := range b3Trace {
+					ctx = metadata.AppendToOutgoingContext(ctx, k, b3Trace[k])
+				}
+
+				return invoker(ctx, method, req, reply, cc, opts...)
+			},
+		),
+	)
 }

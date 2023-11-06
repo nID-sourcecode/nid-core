@@ -4,7 +4,7 @@ package filter
 import (
 	"context"
 
-	ext_proc_pb "github.com/envoyproxy/go-control-plane/envoy/service/ext_proc/v3alpha"
+	ext_proc_pb "github.com/envoyproxy/go-control-plane/envoy/service/ext_proc/v3"
 )
 
 // ProcessingResponse contains the information returned from a filter.
@@ -31,11 +31,11 @@ type Filter interface {
 type DefaultFilter struct{}
 
 // OnHTTPRequest processes an HTTP request. The default implementation is to do nothing.
-func (d DefaultFilter) OnHTTPRequest(ctx context.Context, body []byte, headers map[string]string) (*ProcessingResponse, error) {
+func (d DefaultFilter) OnHTTPRequest(_ context.Context, _ []byte, _ map[string]string) (*ProcessingResponse, error) {
 	return nil, nil
 }
 
 // OnHTTPResponse processes an HTTP response. The default implementation is to do nothing.
-func (d DefaultFilter) OnHTTPResponse(ctx context.Context, body []byte, headers map[string]string) (*ProcessingResponse, error) {
+func (d DefaultFilter) OnHTTPResponse(_ context.Context, _ []byte, _ map[string]string) (*ProcessingResponse, error) {
 	return nil, nil
 }

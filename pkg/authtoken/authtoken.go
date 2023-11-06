@@ -8,7 +8,7 @@ import (
 	"encoding/hex"
 	"strings"
 
-	"lab.weave.nl/nid/nid-core/pkg/utilities/errors"
+	"github.com/nID-sourcecode/nid-core/pkg/utilities/errors"
 )
 
 // GenerateBytes returns securely generated random bytes.
@@ -34,7 +34,7 @@ func generateBytes(n int) ([]byte, error) {
 func NewToken(n int) (string, error) {
 	b, err := generateBytes(n)
 
-	return base64.URLEncoding.EncodeToString(b), err
+	return base64.RawURLEncoding.EncodeToString(b), err
 }
 
 // Hash returns a sha256 hash based on given token

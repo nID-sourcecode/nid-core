@@ -5,6 +5,8 @@ import (
 	"strconv"
 
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+
+	//nolint:gomodguard // needed for backwards compatibility
 	log "github.com/sirupsen/logrus"
 	"github.com/weaveworks/promrus"
 )
@@ -29,6 +31,7 @@ func ExposePromWithPort(port int) {
 	go func() {
 		http.Handle("/metrics", promhttp.Handler())
 		log.Infof("Started http server for prometheus metrics on port 8080")
+		// nolint:gosec
 		log.Fatal(http.ListenAndServe(":"+strconv.Itoa(port), nil))
 	}()
 }

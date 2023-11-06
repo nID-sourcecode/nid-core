@@ -5,7 +5,7 @@ package mock
 import (
 	context "context"
 
-	envoy_service_ext_proc_v3alpha "github.com/envoyproxy/go-control-plane/envoy/service/ext_proc/v3alpha"
+	envoy_service_ext_proc_v3alpha "github.com/envoyproxy/go-control-plane/envoy/service/ext_proc/v3"
 	mock "github.com/stretchr/testify/mock"
 )
 

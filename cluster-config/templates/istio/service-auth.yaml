@@ -9,4 +9,18 @@ spec:
       forwardOriginalToken: true
   selector:
     matchLabels:
-      wasm_filter_scopeverification: enabled
+      nid-datasource: enabled
+---
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: "scopeverification-jwt-auth-policy"
+spec:
+  selector:
+    matchLabels:
+      nid-datasource: enabled
+  action: DENY
+  rules:
+  - from:
+    - source:
+        notRequestPrincipals: ["*"]

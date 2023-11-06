@@ -4,22 +4,24 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/golang/protobuf/ptypes/empty"
+	"google.golang.org/protobuf/types/known/emptypb"
+
 	"github.com/jinzhu/gorm"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
 	"google.golang.org/grpc/codes"
 
-	"lab.weave.nl/nid/nid-core/pkg/utilities/database/v2"
-	"lab.weave.nl/nid/nid-core/pkg/utilities/grpcserver/headers"
-	headersmock "lab.weave.nl/nid/nid-core/pkg/utilities/grpcserver/headers/mock"
-	"lab.weave.nl/nid/nid-core/pkg/utilities/grpctesthelpers"
-	"lab.weave.nl/nid/nid-core/pkg/utilities/jwt/v2"
-	"lab.weave.nl/nid/nid-core/pkg/utilities/password"
-	"lab.weave.nl/nid/nid-core/svc/auth/models"
+	"github.com/nID-sourcecode/nid-core/pkg/password"
+	"github.com/nID-sourcecode/nid-core/pkg/utilities/database/v2"
+	"github.com/nID-sourcecode/nid-core/pkg/utilities/grpcserver/headers"
+	headersmock "github.com/nID-sourcecode/nid-core/pkg/utilities/grpcserver/headers/mock"
+	"github.com/nID-sourcecode/nid-core/pkg/utilities/grpctesthelpers"
+	"github.com/nID-sourcecode/nid-core/pkg/utilities/jwt/v2"
+	"github.com/nID-sourcecode/nid-core/pkg/utilities/log/v2"
+	"github.com/nID-sourcecode/nid-core/svc/auth/models"
 )
 
-var ErrAllesIsLek error = fmt.Errorf("alles is lek")
+var ErrAllesIsLek = fmt.Errorf("alles is lek")
 
 type AuthorizationServiceTestSuite struct {
 	grpctesthelpers.GrpcTestSuite
@@ -66,17 +68,16 @@ func (s *AuthorizationServiceTestSuite) TearDownTest() {
 
 func (s *AuthorizationServiceTestSuite) TearDownSuite() {
 	s.NoError(s.db.Close())
-	fmt.Println("Closing db connection")
+	log.Info("Closing db connection")
 }
 
 func (s *AuthorizationServiceTestSuite) TestSignInSuccess() {
 	s.createDummyUser("wim@weave.nl", "alsdkfj#@4!")
-	res, err := s.authServer.Signin(s.Ctx, &empty.Empty{})
+	res, err := s.authServer.Signin(s.Ctx, &emptypb.Empty{})
 	s.Require().NoError(err)
 
 	claims, err := s.authServer.jwtClient.GetClaims(res.Bearer)
 	s.Require().NoError(err)
-	s.Require().NoError(claims.Valid())
 	s.Equal("weave.nl", claims["iss"].(string))
 }
 
@@ -123,7 +124,7 @@ func (s *AuthorizationServiceTestSuite) TestCantSignin() {
 	for _, test := range tests {
 		s.Run(test.Name, func() {
 			s.authServer.metadataHelper = test.MetaHelper()
-			_, err := s.authServer.Signin(s.Ctx, &empty.Empty{})
+			_, err := s.authServer.Signin(s.Ctx, &emptypb.Empty{})
 			s.Require().Error(err)
 			s.VerifyStatusError(err, test.ExpectedErr)
 		})

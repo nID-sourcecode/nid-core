@@ -5,14 +5,14 @@ import (
 	"crypto/rsa"
 	"testing"
 
-	"github.com/lestrrat-go/jwx/jwk"
+	"github.com/lestrrat-go/jwx/v2/jwk"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
 
-	metadataMock "lab.weave.nl/nid/nid-core/pkg/utilities/grpcserver/headers/mock"
-	"lab.weave.nl/nid/nid-core/pkg/utilities/grpctesthelpers"
-	"lab.weave.nl/nid/nid-core/svc/pseudonymization/keymanager"
-	pb "lab.weave.nl/nid/nid-core/svc/pseudonymization/proto"
+	metadataMock "github.com/nID-sourcecode/nid-core/pkg/utilities/grpcserver/headers/mock"
+	"github.com/nID-sourcecode/nid-core/pkg/utilities/grpctesthelpers"
+	"github.com/nID-sourcecode/nid-core/svc/pseudonymization/keymanager"
+	pb "github.com/nID-sourcecode/nid-core/svc/pseudonymization/proto"
 )
 
 type PseudonymServiceTestSuite struct {
@@ -28,16 +28,18 @@ func (s *PseudonymServiceTestSuite) SetupTest() {
 	privateKey, err := rsa.GenerateKey(rand.Reader, 1024)
 	s.Require().NoError(err)
 
-	jwkKey, err := jwk.New(privateKey.PublicKey)
+	jwkKey, err := jwk.PublicKeyOf(privateKey)
 	s.Require().NoError(err)
 
 	jwkKey.Set(jwk.AlgorithmKey, "RSA1_5")
 	jwkKey.Set(jwk.KeyUsageKey, string(jwk.ForEncryption))
 
 	fetcherMock := &keymanager.JWKSFetcherMock{}
-	fetcherMock.On("Fetch", mock.Anything).Return(&jwk.Set{
-		Keys: []jwk.Key{jwkKey},
-	}, nil)
+	jwkSet := jwk.NewSet()
+	err = jwkSet.AddKey(jwkKey)
+	s.Require().NoError(err)
+
+	fetcherMock.On("Fetch", mock.Anything).Return(jwkSet, nil)
 
 	keyManager := keymanager.NewKeyManager("someurl", durationDay, fetcherMock)
 	s.keyManager = keyManager

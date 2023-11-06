@@ -1,3 +1,4 @@
+// Package documentation
 package main
 
 import (
@@ -9,13 +10,13 @@ import (
 	"github.com/xanzy/go-gitlab"
 	"google.golang.org/grpc"
 
-	"lab.weave.nl/nid/nid-core/pkg/utilities/grpcserver"
-	"lab.weave.nl/nid/nid-core/pkg/utilities/grpcserver/metrics"
-	"lab.weave.nl/nid/nid-core/pkg/utilities/log/v2"
-	"lab.weave.nl/nid/nid-core/pkg/utilities/objectstorage"
-	"lab.weave.nl/nid/nid-core/pkg/utilities/objectstorage/s3"
-	"lab.weave.nl/nid/nid-core/svc/documentation/packages/git"
-	documentationPB "lab.weave.nl/nid/nid-core/svc/documentation/proto"
+	"github.com/nID-sourcecode/nid-core/pkg/utilities/grpcserver"
+	"github.com/nID-sourcecode/nid-core/pkg/utilities/grpcserver/metrics"
+	"github.com/nID-sourcecode/nid-core/pkg/utilities/log/v2"
+	"github.com/nID-sourcecode/nid-core/pkg/utilities/objectstorage"
+	"github.com/nID-sourcecode/nid-core/pkg/utilities/objectstorage/s3"
+	"github.com/nID-sourcecode/nid-core/svc/documentation/packages/git"
+	documentationPB "github.com/nID-sourcecode/nid-core/svc/documentation/proto"
 )
 
 func initialise() *DocumentationServiceRegistry {
@@ -35,7 +36,7 @@ func initialise() *DocumentationServiceRegistry {
 	for i := 0; i < amountRetries; i++ {
 		storageClient, err = s3.NewClient(context.Background(), &config.ObjectStorage.ClientConfig, config.ObjectStorage.Bucket, nil)
 		if err != nil {
-			log.WithError(err).Warn("failed to create storage client, retrying in 1s")
+			log.WithError(err).WithField("AccessKey", config.ObjectStorage.AccessKey).WithField("Bucket", config.ObjectStorage.Bucket).Warn("failed to create storage client, retrying in 1s")
 			time.Sleep(1 * time.Second)
 		} else {
 			break
@@ -73,7 +74,7 @@ func main() {
 	grpcConfig.LogFormatter = registry.documentationClient.conf.GetLogFormatter()
 	grpcConfig.Port = registry.documentationClient.conf.Port
 
-	if err := grpcserver.InitWithConf(registry, grpcConfig); err != nil {
+	if err := grpcserver.InitWithConf(registry, &grpcConfig); err != nil {
 		log.Fatalf("Service registry init default failed: %s", err)
 	}
 }

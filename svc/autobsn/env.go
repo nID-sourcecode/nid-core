@@ -1,7 +1,7 @@
 package main
 
 import (
-	"lab.weave.nl/nid/nid-core/pkg/environment"
+	"github.com/nID-sourcecode/nid-core/pkg/environment"
 )
 
 // AutoBSNConfig implements the used environment variables

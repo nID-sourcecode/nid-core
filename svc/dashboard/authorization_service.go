@@ -3,16 +3,16 @@ package main
 import (
 	"context"
 
-	"github.com/golang/protobuf/ptypes/empty"
+	"google.golang.org/protobuf/types/known/emptypb"
 
-	grpcerrors "lab.weave.nl/nid/nid-core/pkg/utilities/grpcserver/errors"
-	"lab.weave.nl/nid/nid-core/pkg/utilities/grpcserver/headers"
-	"lab.weave.nl/nid/nid-core/pkg/utilities/jwt/v2"
-	"lab.weave.nl/nid/nid-core/pkg/utilities/log/v2"
-	"lab.weave.nl/nid/nid-core/pkg/utilities/password"
-	"lab.weave.nl/nid/nid-core/svc/dashboard/proto"
-	dashboardscopes "lab.weave.nl/nid/nid-core/svc/dashboard/proto/scopes"
-	documentationscopes "lab.weave.nl/nid/nid-core/svc/documentation/proto/scopes"
+	"github.com/nID-sourcecode/nid-core/pkg/password"
+	grpcerrors "github.com/nID-sourcecode/nid-core/pkg/utilities/grpcserver/errors"
+	"github.com/nID-sourcecode/nid-core/pkg/utilities/grpcserver/headers"
+	"github.com/nID-sourcecode/nid-core/pkg/utilities/jwt/v2"
+	"github.com/nID-sourcecode/nid-core/pkg/utilities/log/v2"
+	"github.com/nID-sourcecode/nid-core/svc/dashboard/proto"
+	dashboardscopes "github.com/nID-sourcecode/nid-core/svc/dashboard/proto/scopes"
+	documentationscopes "github.com/nID-sourcecode/nid-core/svc/documentation/proto/scopes"
 )
 
 // AuthorizationServiceServer handles authorization for the dashboard
@@ -25,7 +25,7 @@ type AuthorizationServiceServer struct {
 }
 
 // Signin signin a dashboard user
-func (a *AuthorizationServiceServer) Signin(ctx context.Context, in *empty.Empty) (*proto.SigninResponseMessage, error) {
+func (a *AuthorizationServiceServer) Signin(ctx context.Context, _ *emptypb.Empty) (*proto.SigninResponseMessage, error) {
 	u, p, err := a.metadataHelper.GetBasicAuth(ctx)
 	if err != nil {
 		log.Extract(ctx).WithError(err).Info("error retrieving basic auth")
@@ -33,7 +33,7 @@ func (a *AuthorizationServiceServer) Signin(ctx context.Context, in *empty.Empty
 		return nil, grpcerrors.ErrInvalidArgument("no basic auth header provided")
 	}
 
-	user, err := a.db.UserDB.GetOnEmail(ctx, u)
+	user, err := a.db.UserDB.GetOnEmail(u)
 	if err != nil {
 		log.Extract(ctx).WithError(err).WithField("email", u).Info("unexisting user tried to sign in")
 

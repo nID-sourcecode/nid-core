@@ -4,13 +4,11 @@ package accessobject
 import (
 	"encoding/json"
 
-	"lab.weave.nl/nid/nid-core/pkg/utilities/errors"
+	"github.com/nID-sourcecode/nid-core/pkg/utilities/errors"
 )
 
-// Error defintions
-var (
-	ErrIncorrectModelName error = errors.New("incorrect model name - model references should look like \"#modelName\"")
-)
+// ErrIncorrectModelName incorrect model name
+var ErrIncorrectModelName error = errors.New("incorrect model name - model references should look like \"#modelName\"")
 
 // AccessModel access model defines how models and fields may be accessed in a graphql endpoint
 type AccessModel struct {

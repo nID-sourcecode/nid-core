@@ -1,3 +1,4 @@
+// Package autobsn
 package main
 
 import (
@@ -9,13 +10,13 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/dgrijalva/jwt-go"
+	"github.com/golang-jwt/jwt"
 
-	"lab.weave.nl/nid/nid-core/pkg/utilities/errors"
-	errgrpc "lab.weave.nl/nid/nid-core/pkg/utilities/grpcserver/errors"
-	"lab.weave.nl/nid/nid-core/pkg/utilities/log/v2"
-	"lab.weave.nl/nid/nid-core/svc/autobsn/proto"
-	walletPB "lab.weave.nl/nid/nid-core/svc/wallet-rpc/proto"
+	"github.com/nID-sourcecode/nid-core/pkg/utilities/errors"
+	errgrpc "github.com/nID-sourcecode/nid-core/pkg/utilities/grpcserver/errors"
+	"github.com/nID-sourcecode/nid-core/pkg/utilities/log/v2"
+	"github.com/nID-sourcecode/nid-core/svc/autobsn/proto"
+	walletPB "github.com/nID-sourcecode/nid-core/svc/wallet-rpc/proto"
 )
 
 // AutoBSNServer the server for autobsn

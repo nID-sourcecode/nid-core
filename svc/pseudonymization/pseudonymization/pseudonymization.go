@@ -7,15 +7,15 @@ import (
 
 	"github.com/miscreant/miscreant.go"
 
-	"lab.weave.nl/nid/nid-core/pkg/utilities/errors"
-	"lab.weave.nl/nid/nid-core/svc/pseudonymization/keyutil"
+	"github.com/nID-sourcecode/nid-core/pkg/utilities/errors"
+	"github.com/nID-sourcecode/nid-core/svc/pseudonymization/keyutil"
 )
 
 const nonceSize = 96
 
-// Error definitions
+// ErrInternalIDLargerThanServiceID Error definitions
 var (
-	ErrInternalIDLargerThanServiceID error = fmt.Errorf("internal ID should be larger than service ID")
+	ErrInternalIDLargerThanServiceID = fmt.Errorf("internal ID should be larger than service ID")
 )
 
 // Encode encodes a

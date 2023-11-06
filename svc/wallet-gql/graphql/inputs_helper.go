@@ -5,7 +5,7 @@ package graphql
 import (
 	"context"
 
-	"lab.weave.nl/nid/nid-core/svc/wallet-gql/models"
+	"github.com/nID-sourcecode/nid-core/svc/wallet-gql/models"
 )
 
 func (t *CreateClient) ToModel(ctx context.Context, r *Resolver) (m models.Client, err error) {

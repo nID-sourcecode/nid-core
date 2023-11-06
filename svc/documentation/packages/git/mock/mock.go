@@ -5,7 +5,7 @@ import (
 	"github.com/stretchr/testify/mock"
 	"github.com/xanzy/go-gitlab"
 
-	"lab.weave.nl/nid/nid-core/svc/documentation/packages/git"
+	"github.com/nID-sourcecode/nid-core/svc/documentation/packages/git"
 )
 
 // MockedClient mocked gitlab client
@@ -80,7 +80,7 @@ type MockedRepositoryFilesClient struct {
 }
 
 // GetRawFile mocks get raw file call
-func (m *MockedRepositoryFilesClient) GetRawFile(pid interface{}, fileName string, opt *gitlab.GetRawFileOptions, options ...gitlab.RequestOptionFunc) ([]byte, *gitlab.Response, error) {
+func (m *MockedRepositoryFilesClient) GetRawFile(pid interface{}, _ string, opt *gitlab.GetRawFileOptions, options ...gitlab.RequestOptionFunc) ([]byte, *gitlab.Response, error) {
 	args := m.MethodCalled("GetRawFile", pid, opt, options)
 
 	return args.Get(0).([]byte), args.Get(1).(*gitlab.Response), args.Error(2) //nolint:gomnd
