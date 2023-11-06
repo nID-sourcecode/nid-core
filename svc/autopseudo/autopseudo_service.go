@@ -9,11 +9,11 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
+	"github.com/golang-jwt/jwt"
 
-	"lab.weave.nl/nid/nid-core/pkg/utilities/errors"
-	"lab.weave.nl/nid/nid-core/pkg/utilities/log/v2"
+	"github.com/nID-sourcecode/nid-core/pkg/utilities/errors"
+	"github.com/nID-sourcecode/nid-core/pkg/utilities/log/v2"
 )
 
 // AutoPseudoServer the server for autopseudo

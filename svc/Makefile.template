@@ -28,7 +28,7 @@ proto/scopes:
 	mkdir proto/scopes
 
 jwt-scopes/values.yaml proto/scopes/scopes.go: proto/scopes proto/*.proto
-	@docker run -it  -w /build \
+	@docker run -it -w /build --platform=linux/amd64 \
 		-v ${PWD}/proto:/build/proto -v ${PWD}/jwt-scopes:/build/jwt-scopes\
 		registry.weave.nl/devops/proto-istio-auth-generator:v0.0.14 \
 		-d=proto -y=/build/jwt-scopes/values.yaml -g=/build/proto/scopes/scopes.go
@@ -62,9 +62,8 @@ protoc_nodocker:
 
 
 protoc_docker:
-	docker run -it -w /build --entrypoint protoc\
+	docker run -it -w /build --entrypoint --platform=linux/amd64 protoc\
 		-v ${PWD}/proto:/build/proto\
-		-v /Users/wouter/Sources/envoy:/envoy\
 		registry.weave.nl/docker/golang-goa/protoc:latest\
 		-I .\
 		-I /go/src \

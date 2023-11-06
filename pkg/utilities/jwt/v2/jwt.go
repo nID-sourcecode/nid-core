@@ -6,19 +6,20 @@ import (
 	"fmt"
 	"time"
 
-	jwtgo "github.com/dgrijalva/jwt-go"
+	jwtgo "github.com/golang-jwt/jwt/v5"
+
 	"github.com/gofrs/uuid"
 )
 
-// Duration constants
+// DurationDay constants
 const (
 	DurationDay = time.Hour * 24
 )
 
 // error defininitions
 var (
-	ErrIncorrectBearerLength error = fmt.Errorf("incorrect bearer length")
-	ErrInvalidToken          error = fmt.Errorf("invalid token")
+	ErrIncorrectBearerLength = fmt.Errorf("incorrect bearer length")
+	ErrInvalidToken          = fmt.Errorf("invalid token")
 )
 
 // ClientOpts options for signin JWT keys
@@ -86,19 +87,6 @@ type Client struct {
 	PubKey  *rsa.PublicKey
 }
 
-// NewPubKeyClient returns a new JWT public key client
-func NewPubKeyClient(pubKey *rsa.PublicKey) *PubKeyClient {
-	return NewPubKeyClientWithOpts(pubKey, DefaultOpts())
-}
-
-// NewPubKeyClientWithOpts returns a new JWT public key client with specified options
-func NewPubKeyClientWithOpts(pubKey *rsa.PublicKey, opts *ClientOpts) *PubKeyClient {
-	return &PubKeyClient{
-		PubKey: pubKey,
-		Opts:   opts,
-	}
-}
-
 // PubKeyClient client for public key tokens
 type PubKeyClient struct {
 	Opts   *ClientOpts
@@ -149,7 +137,7 @@ func (c *Client) GetScopesFromClaims(claims jwtgo.MapClaims) ([]string, error) {
 	if !ok {
 		return nil, ErrInvalidToken
 	}
-	res := []string{}
+	var res []string
 	for _, scope := range scopes {
 		scopeString, ok := scope.(string)
 		if !ok {
@@ -216,7 +204,7 @@ func (c *Client) SignToken(customClaims map[string]interface{}) (string, error) 
 	token.Claims = claims
 	key := c.PrivateKey()
 	if key == nil {
-		return "", ErrJWTPrivateNotFound
+		return "", errJWTPrivateNotFound
 	}
 	signedToken, err := token.SignedString(key)
 	if err != nil {

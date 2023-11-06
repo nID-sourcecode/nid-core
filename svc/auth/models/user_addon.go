@@ -2,7 +2,6 @@
 package models
 
 import (
-	"context"
 	"strings"
 
 	"github.com/gofrs/uuid"
@@ -10,7 +9,7 @@ import (
 )
 
 // GetOnEmail get user on email
-func (m *UserDB) GetOnEmail(ctx context.Context, email string) (*User, error) {
+func (m *UserDB) GetOnEmail(email string) (*User, error) {
 	var native User
 	err := m.Db.Table(m.TableName()).Where("email = ?", strings.ToLower(email)).Find(&native).Error
 	if err != nil {

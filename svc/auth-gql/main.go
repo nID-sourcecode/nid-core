@@ -1,3 +1,4 @@
+// Package auth-gql
 package main
 
 import (
@@ -9,12 +10,12 @@ import (
 	"github.com/jinzhu/gorm"
 	"github.com/vrischmann/envconfig"
 
-	"lab.weave.nl/nid/nid-core/pkg/utilities/database/v2"
-	"lab.weave.nl/nid/nid-core/pkg/utilities/httpserver/v2"
-	"lab.weave.nl/nid/nid-core/pkg/utilities/log/v2"
-	"lab.weave.nl/nid/nid-core/svc/auth-gql/auth"
-	"lab.weave.nl/nid/nid-core/svc/auth-gql/graphql"
-	"lab.weave.nl/nid/nid-core/svc/auth/models"
+	"github.com/nID-sourcecode/nid-core/pkg/httpserver"
+	"github.com/nID-sourcecode/nid-core/pkg/utilities/database/v2"
+	"github.com/nID-sourcecode/nid-core/pkg/utilities/log/v2"
+	"github.com/nID-sourcecode/nid-core/svc/auth-gql/auth"
+	"github.com/nID-sourcecode/nid-core/svc/auth-gql/graphql"
+	"github.com/nID-sourcecode/nid-core/svc/auth/models"
 )
 
 func initialise() (*graphql.Resolver, *AuthGQLConfig, *gorm.DB) {

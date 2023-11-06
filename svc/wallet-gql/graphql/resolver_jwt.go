@@ -9,11 +9,11 @@ import (
 	"strings"
 	"time"
 
-	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/gofrs/uuid"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/jinzhu/gorm"
 	"golang.org/x/crypto/bcrypt"
-	"lab.weave.nl/nid/nid-core/svc/wallet-gql/models"
+	"github.com/nID-sourcecode/nid-core/svc/wallet-gql/models"
 	"lab.weave.nl/weave/generator/gen/auth"
 	jwtutils "lab.weave.nl/weave/generator/jwtutils"
 	generr "lab.weave.nl/weave/generator/pkg/errors"

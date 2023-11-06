@@ -5,18 +5,20 @@ import (
 	"testing"
 	"time"
 
+	"github.com/nID-sourcecode/nid-core/svc/auth/internal/config"
+
 	"github.com/stretchr/testify/suite"
 	"github.com/vrischmann/envconfig"
 
-	"lab.weave.nl/nid/nid-core/pkg/utilities/grpctesthelpers"
-	"lab.weave.nl/nid/nid-core/pkg/utilities/jwt/v3"
-	pb "lab.weave.nl/nid/nid-core/svc/auth/proto"
+	"github.com/nID-sourcecode/nid-core/pkg/utilities/grpctesthelpers"
+	"github.com/nID-sourcecode/nid-core/pkg/utilities/jwt/v3"
+	pb "github.com/nID-sourcecode/nid-core/svc/auth/transport/grpc/proto"
 )
 
 type WellKnownServiceTestSuite struct {
 	grpctesthelpers.GrpcTestSuite
 	srv  *WellKnownServiceServer
-	conf *AuthConfig
+	conf *config.AuthConfig
 }
 
 func (s *WellKnownServiceTestSuite) SetupTest() {
@@ -24,7 +26,7 @@ func (s *WellKnownServiceTestSuite) SetupTest() {
 }
 
 func (s *WellKnownServiceTestSuite) SetupSuite() {
-	c := &AuthConfig{}
+	c := &config.AuthConfig{}
 	if err := envconfig.InitWithOptions(c, envconfig.Options{AllOptional: true}); err != nil {
 		s.Failf("init conf failed", "%+v", err)
 	}

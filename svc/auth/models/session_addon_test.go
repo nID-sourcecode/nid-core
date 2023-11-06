@@ -2,17 +2,19 @@ package models
 
 import (
 	"context"
-	"fmt"
 	"testing"
 	"time"
 
+	"github.com/nID-sourcecode/nid-core/pkg/utilities/log/v2"
+
+	"github.com/gofrs/uuid"
 	"github.com/jinzhu/gorm"
 	"github.com/stretchr/testify/suite"
 
-	"lab.weave.nl/nid/nid-core/pkg/authtoken"
-	"lab.weave.nl/nid/nid-core/pkg/utilities/database/v2"
-	"lab.weave.nl/nid/nid-core/pkg/utilities/grpctesthelpers"
-	"lab.weave.nl/nid/nid-core/pkg/utilities/password"
+	"github.com/nID-sourcecode/nid-core/pkg/authtoken"
+	"github.com/nID-sourcecode/nid-core/pkg/password"
+	"github.com/nID-sourcecode/nid-core/pkg/utilities/database/v2"
+	"github.com/nID-sourcecode/nid-core/pkg/utilities/grpctesthelpers"
 )
 
 const databaseName = "auth"
@@ -22,9 +24,11 @@ type SessionAddOnTestSuite struct {
 	db              *gorm.DB
 	tx              *gorm.DB
 	SessionDB       *SessionDB
+	ClientDB        *ClientDB
 	session         *Session
 	passwordManager password.IManager
 	audience        *Audience
+	client          *Client
 }
 
 func (s *SessionAddOnTestSuite) SetupTest() {
@@ -38,6 +42,7 @@ func (s *SessionAddOnTestSuite) SetupTest() {
 	// s.Require().Len(AddForeignKeys(s.tx), 0) FIXME reintroduce foreign keys when generator bug is fixed
 
 	s.SessionDB = NewSessionDB(s.tx)
+	s.ClientDB = NewClientDB(s.tx)
 	session, err := s.createDummySession()
 	s.Require().NoError(err)
 	s.session = session
@@ -49,7 +54,7 @@ func (s *SessionAddOnTestSuite) TearDownTest() {
 
 func (s *SessionAddOnTestSuite) TearDownSuite() {
 	s.NoError(s.db.Close())
-	fmt.Println("Closing db connection")
+	log.Info("Closing db connection")
 }
 
 func (s *SessionAddOnTestSuite) createDummySession() (*Session, error) {
@@ -66,6 +71,8 @@ func (s *SessionAddOnTestSuite) createDummySession() (*Session, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	s.client = client
 
 	client2 := &Client{
 		Color:    "red",
@@ -182,6 +189,37 @@ func (s *SessionAddOnTestSuite) TestUpdateSessionState() {
 	err := s.SessionDB.UpdateSessionState(s.session, SessionStateAccepted)
 	s.NoError(err)
 	s.Equal(s.session.State, SessionStateAccepted)
+}
+
+func (s *SessionAddOnTestSuite) TestUpdateSessionStateUpdateOnlyState() {
+	s.Require().NotEqual(s.session.State, SessionStateAccepted)
+
+	// Setup
+	originalSession := s.session
+	testClientColor := s.client.Color
+
+	// Update test client
+	s.client.Color = "purple"
+
+	// Update the session
+	s.session = &Session{
+		Client: s.client,
+	}
+
+	// UpdateSessionState
+	err := s.SessionDB.UpdateSessionState(s.session, SessionStateAccepted)
+	s.Require().NoError(err)
+	s.Require().Equal(s.session.State, SessionStateAccepted)
+
+	// Check if client was updated
+	databaseTestClient := &Client{}
+	s.ClientDB.Db.Where("id = ?", s.client.ID).First(databaseTestClient)
+
+	s.NotEqual(databaseTestClient.ID, uuid.Nil, "testclient-session-addon not created in database")
+	s.Equal(testClientColor, databaseTestClient.Color, "Client color should not have changed")
+
+	// Cleanup
+	s.session = originalSession
 }
 
 func (s *SessionAddOnTestSuite) TestUpdateSessionSubject() {

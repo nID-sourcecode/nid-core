@@ -14,14 +14,14 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/client-go/kubernetes"
 
-	"lab.weave.nl/nid/nid-core/pkg/utilities/errors"
+	"github.com/nID-sourcecode/nid-core/pkg/utilities/errors"
 )
 
 const (
 	defaultVirtualServicePort = 80
 )
 
-var errEmptyExternalHostname error = fmt.Errorf("parameter ExternalHostname is an empty string")
+var errEmptyExternalHostname = fmt.Errorf("parameter ExternalHostname is an empty string")
 
 // Client hosts the kubernetes and istio clients
 type Client struct {
@@ -50,7 +50,8 @@ type Interface interface {
 
 // CreateServiceAndDeployment creates service, virtual service and deployment
 func (c *Client) CreateServiceAndDeployment(ctx context.Context, namespace, serviceName, externalHostname string,
-	servicePort int32, dockerImage string, env map[string]string) error {
+	servicePort int32, dockerImage string, env map[string]string,
+) error {
 	err := c.CreateService(ctx, externalHostname, serviceName, namespace, servicePort)
 	if err != nil {
 		return err
@@ -70,7 +71,7 @@ func (c *Client) CreateServiceAndDeployment(ctx context.Context, namespace, serv
 }
 
 // CreateVirtualService creates a virtual service
-func (c *Client) CreateVirtualService(ctx context.Context, externalHostname, serviceName, namespace string, servicePort int32) error {
+func (c *Client) CreateVirtualService(ctx context.Context, externalHostname, serviceName, namespace string, _ int32) error {
 	if externalHostname == "" {
 		return errEmptyExternalHostname
 	}
@@ -110,7 +111,7 @@ func (c *Client) CreateVirtualService(ctx context.Context, externalHostname, ser
 }
 
 // CreateService creates a service for given name port and namespace
-func (c *Client) CreateService(ctx context.Context, externalHostname, serviceName, namespace string, servicePort int32) error {
+func (c *Client) CreateService(ctx context.Context, _, serviceName, namespace string, servicePort int32) error {
 	service := &corev1.Service{
 		TypeMeta: metav1.TypeMeta{
 			Kind: "Service",
@@ -138,7 +139,7 @@ func (c *Client) CreateService(ctx context.Context, externalHostname, serviceNam
 }
 
 // CreateDeployment creates a deployment
-func (c *Client) CreateDeployment(ctx context.Context, externalHostname, serviceName, namespace, dockerImage string, servicePort int32, env map[string]string) error {
+func (c *Client) CreateDeployment(ctx context.Context, _, serviceName, namespace, dockerImage string, servicePort int32, env map[string]string) error {
 	envVars := make([]corev1.EnvVar, 0)
 	for k, v := range env {
 		envVars = append(envVars, corev1.EnvVar{

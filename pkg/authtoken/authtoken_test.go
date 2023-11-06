@@ -30,7 +30,7 @@ func (s *AuthTokenTestSuite) TestNewTokenHashing() {
 	s.Require().NoError(err)
 
 	// DecodeString will return error when token encoding is invalid
-	_, err = base64.URLEncoding.DecodeString(token)
+	_, err = base64.RawURLEncoding.DecodeString(token)
 	s.Require().NoError(err)
 
 	_, err = Hash(token)

@@ -7,10 +7,10 @@ import (
 	"github.com/jinzhu/gorm"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
-	"lab.weave.nl/nid/nid-core/pkg/utilities/errors"
-	"lab.weave.nl/nid/nid-core/pkg/utilities/log/v2"
-	"lab.weave.nl/nid/nid-core/svc/wallet-gql/models"
-	"lab.weave.nl/nid/nid-core/svc/wallet-rpc/proto"
+	"github.com/nID-sourcecode/nid-core/pkg/utilities/errors"
+	"github.com/nID-sourcecode/nid-core/pkg/utilities/log/v2"
+	"github.com/nID-sourcecode/nid-core/svc/wallet-gql/models"
+	"github.com/nID-sourcecode/nid-core/svc/wallet-rpc/proto"
 )
 
 func (w *WalletServer) createOrFindClient(ctx context.Context, tx *gorm.DB, clientID uuid.UUID) (*models.Client, error) {

@@ -10,14 +10,13 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/dgrijalva/jwt-go"
-	envoy_type_v3 "github.com/envoyproxy/go-control-plane/envoy/type/v3"
+	authv3 "github.com/envoyproxy/go-control-plane/envoy/service/auth/v3"
 
-	"lab.weave.nl/nid/nid-core/pkg/extproc/filter"
-	"lab.weave.nl/nid/nid-core/pkg/utilities/errors"
-	"lab.weave.nl/nid/nid-core/pkg/utilities/log/v2"
-	"lab.weave.nl/nid/nid-core/svc/nid-filter/filters/utils"
-	"lab.weave.nl/nid/nid-core/svc/wallet-rpc/proto"
+	"github.com/golang-jwt/jwt"
+
+	"github.com/nID-sourcecode/nid-core/pkg/utilities/errors"
+	"github.com/nID-sourcecode/nid-core/pkg/utilities/log/v2"
+	"github.com/nID-sourcecode/nid-core/svc/wallet-rpc/proto"
 )
 
 type accessClaims struct {
@@ -42,38 +41,28 @@ type Config struct {
 	WalletClient      proto.WalletClient
 }
 
-// FilterInitializer creates new filters
-type FilterInitializer struct {
-	config *Config
-}
-
-// Name returns the filter name
-func (a *FilterInitializer) Name() string {
-	return a.config.FilterName
-}
-
-// NewFilterInitializer creates a new filter initializer
-func NewFilterInitializer(config *Config) *FilterInitializer {
-	return &FilterInitializer{config: config}
-}
-
-// NewFilter creates a new filter
-func (a *FilterInitializer) NewFilter() (filter.Filter, error) {
-	return &Filter{config: a.config}, nil
+// New creates a new filter initializer
+func New(config *Config) *Filter {
+	return &Filter{config: config}
 }
 
 // Filter is responsible for processing a single HTTP request and response
 type Filter struct {
-	filter.DefaultFilter
 	config      *Config
 	authHeader  *string
 	replacement *string
 }
 
-var errNoPathHeader = errors.New("no :path header found")
+var (
+	errNoPathHeader              = errors.New("no :path header found")
+	errNoAuthorizationHeader     = errors.New("no authorization header found")
+	errNoReplacementFoundInToken = errors.New("no replacement found in the token, you may be accessing the wrong service")
+)
 
-// OnHTTPRequest processes an HTTP request
-func (a *Filter) OnHTTPRequest(ctx context.Context, body []byte, headers map[string]string) (*filter.ProcessingResponse, error) {
+// Check processes the HTTP request
+func (a *Filter) Check(ctx context.Context, request *authv3.CheckRequest) error {
+	headers := request.GetAttributes().GetRequest().GetHttp().GetHeaders()
+
 	if authHeader, ok := headers["authorization"]; ok {
 		a.authHeader = &authHeader
 	}
@@ -81,7 +70,7 @@ func (a *Filter) OnHTTPRequest(ctx context.Context, body []byte, headers map[str
 	// handle headers
 	path, ok := headers[":path"]
 	if !ok {
-		return nil, errNoPathHeader
+		return errNoPathHeader
 	}
 	log.Infof("path: %s", path)
 	queryIndex := strings.Index(path, "?")
@@ -97,17 +86,19 @@ func (a *Filter) OnHTTPRequest(ctx context.Context, body []byte, headers map[str
 		var err error
 		query, err = url.ParseQuery(queryString)
 		if err != nil {
-			return nil, errors.Wrap(err, "parsing query")
+			return errors.Wrap(err, "parsing query")
 		}
 
 		isIdentifierInQuery = a.isIdentifierInQuery(query)
 	}
 
-	if isIdentifierInQuery || body != nil {
-		res, err := a.parseReplacement(ctx)
-		if res != nil || err != nil {
-			log.Infof("parse pseudo error or res, %+v, %+v", res, err)
-			return res, err
+	body := request.GetAttributes().GetRequest().GetHttp().GetBody()
+
+	if isIdentifierInQuery || body != "" {
+		err := a.parseReplacement(ctx)
+		if err != nil {
+			log.Errorf("parse pseudo error or res, %+v", err)
+			return err
 		}
 	}
 
@@ -125,23 +116,19 @@ func (a *Filter) OnHTTPRequest(ctx context.Context, body []byte, headers map[str
 		log.Infof("adjustedPath: %s", adjustedPath)
 	}
 
-	var newBody []byte
-	if body != nil {
-		bodyString := string(body)
-		if strings.Contains(bodyString, a.config.SubjectIdentifier) {
-			if a.replacement == nil {
-			}
-
-			newBodyString := strings.ReplaceAll(bodyString, a.config.SubjectIdentifier, *a.replacement)
-			newBody = []byte(newBodyString)
-			headers["content-length"] = fmt.Sprintf("%d", len(newBody))
+	var newBody string
+	if body != "" {
+		if strings.Contains(body, a.config.SubjectIdentifier) {
+			newBodyString := strings.ReplaceAll(body, a.config.SubjectIdentifier, *a.replacement)
+			headers["content-length"] = fmt.Sprintf("%d", len(newBodyString))
+			newBody = newBodyString
 		}
 	}
 
-	return &filter.ProcessingResponse{
-		NewHeaders: headers,
-		NewBody:    newBody,
-	}, nil
+	request.GetAttributes().GetRequest().GetHttp().Body = newBody
+	request.GetAttributes().GetRequest().GetHttp().Headers = headers
+
+	return nil
 }
 
 // Name returns the filter name
@@ -190,37 +177,37 @@ func parseToken(authHeader string) (*accessClaims, error) {
 	return &claims, nil
 }
 
-func (a *Filter) parseReplacement(ctx context.Context) (*filter.ProcessingResponse, error) {
+func (a *Filter) parseReplacement(ctx context.Context) error {
 	if a.authHeader == nil {
-		return utils.GraphqlError("no authorization header specified", envoy_type_v3.StatusCode_BadRequest), nil
+		return errNoAuthorizationHeader
 	}
 
 	claims, err := parseToken(*a.authHeader)
 	if err != nil {
-		return utils.GraphqlError(errors.Wrap(err, "parsing token").Error(), envoy_type_v3.StatusCode_BadRequest), nil
+		return errors.Wrap(err, "parsing token")
 	}
 
 	encryptedPseudonym, ok := claims.Subjects[a.config.Namespace]
 	if !ok {
-		return utils.GraphqlError("no replacement found in the token, you may be accessing the wrong service", envoy_type_v3.StatusCode_BadRequest), nil
+		return errNoReplacementFoundInToken
 	}
 
 	pseudonym, err := a.decryptPseudo(encryptedPseudonym)
 	if err != nil {
-		return nil, errors.Wrap(err, "decrypting replacement")
+		return errors.Wrap(err, "decrypting replacement")
 	}
 
 	if !a.config.TranslateToBSN {
 		a.replacement = &pseudonym
 
-		return nil, nil
+		return nil
 	}
 
 	res, err := a.config.WalletClient.GetBSNForPseudonym(ctx, &proto.GetBSNForPseudonymRequest{Pseudonym: pseudonym})
 	if err != nil {
-		return nil, errors.Wrap(err, "getting bsn for pseudonym from wallet")
+		return errors.Wrap(err, "getting bsn for pseudonym from wallet")
 	}
 	bsn := res.GetBsn()
 	a.replacement = &bsn
-	return nil, nil
+	return nil
 }

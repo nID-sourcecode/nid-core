@@ -7,15 +7,12 @@ import (
 	"net/url"
 	"strings"
 
-	"lab.weave.nl/nid/nid-core/pkg/extproc/filter"
-	"lab.weave.nl/nid/nid-core/pkg/utilities/errors"
-	authpb "lab.weave.nl/nid/nid-core/svc/auth/proto"
+	"github.com/nID-sourcecode/nid-core/pkg/extproc/filter"
+	"github.com/nID-sourcecode/nid-core/pkg/utilities/errors"
+	authpb "github.com/nID-sourcecode/nid-core/svc/auth/transport/grpc/proto"
 )
 
-// Error definitions
-var (
-	ErrHeaderNotSpecified = errors.New("header not specified")
-)
+var errHeaderNotSpecified = errors.New("header not specified")
 
 // FilterInitializer creates new authswap filters
 type FilterInitializer struct {
@@ -44,7 +41,7 @@ type Filter struct {
 }
 
 // OnHTTPRequest handles an http request
-func (s *Filter) OnHTTPRequest(ctx context.Context, body []byte, headers map[string]string) (*filter.ProcessingResponse, error) {
+func (s *Filter) OnHTTPRequest(ctx context.Context, _ []byte, headers map[string]string) (*filter.ProcessingResponse, error) {
 	authHeader, ok := headers["authorization"]
 	if !ok {
 		return nil, nil
@@ -52,15 +49,15 @@ func (s *Filter) OnHTTPRequest(ctx context.Context, body []byte, headers map[str
 
 	requestProtocol, ok := headers["x-forwarded-proto"]
 	if !ok {
-		return nil, errors.Errorf("%w: x-forwarded-proto", ErrHeaderNotSpecified)
+		return nil, errors.Errorf("%w: x-forwarded-proto", errHeaderNotSpecified)
 	}
 	requestAuthority, ok := headers[":authority"]
 	if !ok {
-		return nil, errors.Errorf("%w: :authority", ErrHeaderNotSpecified)
+		return nil, errors.Errorf("%w: :authority", errHeaderNotSpecified)
 	}
 	requestPath, ok := headers[":path"]
 	if !ok {
-		return nil, errors.Errorf("%w: :path", ErrHeaderNotSpecified)
+		return nil, errors.Errorf("%w: :path", errHeaderNotSpecified)
 	}
 	audience := fmt.Sprintf("%s://%s%s", requestProtocol, requestAuthority, requestPath)
 	audienceURI, err := url.Parse(audience)

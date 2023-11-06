@@ -4,7 +4,7 @@ package keymanager
 //import (
 //	"fmt"
 //	"github.com/stretchr/testify/suite"
-//	"lab.weave.nl/nid/nid-core/services/pseudonymization/test"
+//	"github.com/nID-sourcecode/nid-core/services/pseudonymization/test"
 //	"testing"
 //	"time"
 //)

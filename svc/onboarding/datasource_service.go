@@ -4,13 +4,14 @@ import (
 	context "context"
 	"fmt"
 
-	"lab.weave.nl/nid/nid-core/pkg/istioutil"
-	"lab.weave.nl/nid/nid-core/pkg/utilities/gqlclient"
-	grpcerrors "lab.weave.nl/nid/nid-core/pkg/utilities/grpcserver/errors"
-	"lab.weave.nl/nid/nid-core/pkg/utilities/grpcserver/headers"
-	"lab.weave.nl/nid/nid-core/pkg/utilities/log/v2"
-	onboardingPB "lab.weave.nl/nid/nid-core/svc/onboarding/proto"
-	pseudoPB "lab.weave.nl/nid/nid-core/svc/pseudonymization/proto"
+	"github.com/nID-sourcecode/nid-core/pkg/gqlclient"
+
+	"github.com/nID-sourcecode/nid-core/pkg/istioutil"
+	grpcerrors "github.com/nID-sourcecode/nid-core/pkg/utilities/grpcserver/errors"
+	"github.com/nID-sourcecode/nid-core/pkg/utilities/grpcserver/headers"
+	"github.com/nID-sourcecode/nid-core/pkg/utilities/log/v2"
+	onboardingPB "github.com/nID-sourcecode/nid-core/svc/onboarding/proto"
+	pseudoPB "github.com/nID-sourcecode/nid-core/svc/pseudonymization/proto"
 )
 
 // DataSourceServiceServer server for handling onboarding of data sources

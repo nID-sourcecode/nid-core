@@ -7,10 +7,10 @@ import (
 	"github.com/jinzhu/gorm"
 	messagebirdRest "github.com/messagebird/go-rest-api"
 
-	"lab.weave.nl/nid/nid-core/pkg/utilities/errors"
-	"lab.weave.nl/nid/nid-core/pkg/utilities/log/v2"
-	"lab.weave.nl/nid/nid-core/svc/wallet-gql/messagebird"
-	"lab.weave.nl/nid/nid-core/svc/wallet-gql/models"
+	"github.com/nID-sourcecode/nid-core/pkg/utilities/errors"
+	"github.com/nID-sourcecode/nid-core/pkg/utilities/log/v2"
+	"github.com/nID-sourcecode/nid-core/svc/wallet-gql/messagebird"
+	"github.com/nID-sourcecode/nid-core/svc/wallet-gql/models"
 )
 
 // MessageBirdClient is a client for the postmark utils package
@@ -19,7 +19,7 @@ import (
 var MessageBirdClient *messagebirdRest.Client
 
 // BeforeCreateHook hook called before created phone number
-func (h *CustomPhoneNumberHooks) BeforeCreateHook(ctx context.Context, tx *gorm.DB, input *CreatePhoneNumber) error {
+func (h *CustomPhoneNumberHooks) BeforeCreateHook(_ context.Context, tx *gorm.DB, input *CreatePhoneNumber) error {
 	// Normalise phone number
 	messagebird := &messagebird.Messagebird{Client: MessageBirdClient}
 	normalised, err := messagebird.NewPhoneLookup(input.PhoneNumber)
@@ -45,7 +45,7 @@ func (h *CustomPhoneNumberHooks) BeforeCreateHook(ctx context.Context, tx *gorm.
 }
 
 // AfterCreateHook hook executed after creating a phone number
-func (h *CustomPhoneNumberHooks) AfterCreateHook(ctx context.Context, tx *gorm.DB, model *models.PhoneNumber) error {
+func (h *CustomPhoneNumberHooks) AfterCreateHook(_ context.Context, tx *gorm.DB, model *models.PhoneNumber) error {
 	// Send verification SMS or call
 	messagebird := &messagebird.Messagebird{Client: MessageBirdClient}
 	token, err := messagebird.NewPhoneVerification(model.PhoneNumber, model.VerificationType.String())

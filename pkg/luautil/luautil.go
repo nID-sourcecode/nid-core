@@ -10,7 +10,7 @@ import (
 	"github.com/yuin/gopher-lua/parse"
 	luajson "layeh.com/gopher-json"
 
-	"lab.weave.nl/nid/nid-core/pkg/utilities/errors"
+	"github.com/nID-sourcecode/nid-core/pkg/utilities/errors"
 )
 
 func convertDateStringsToTicks(obj map[string]interface{}) {
@@ -67,6 +67,7 @@ func ToGoValue(lv lua.LValue) (interface{}, error) {
 	return toGoValue(lv, make(map[lua.LValue]bool))
 }
 
+//nolint:gocognit
 func toGoValue(lv lua.LValue, visited map[lua.LValue]bool) (interface{}, error) {
 	switch converted := lv.(type) {
 	case *lua.LNilType:

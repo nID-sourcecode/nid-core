@@ -3,13 +3,14 @@ package gqlclient
 import (
 	"testing"
 
+	gqlMock "github.com/nID-sourcecode/nid-core/pkg/gqlclient/mock"
+
 	"github.com/gofrs/uuid"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
 
-	"lab.weave.nl/nid/nid-core/pkg/utilities/errors"
-	gqlMock "lab.weave.nl/nid/nid-core/pkg/utilities/gqlclient/mock"
-	"lab.weave.nl/nid/nid-core/pkg/utilities/grpctesthelpers"
+	"github.com/nID-sourcecode/nid-core/pkg/utilities/errors"
+	"github.com/nID-sourcecode/nid-core/pkg/utilities/grpctesthelpers"
 )
 
 type AuthClientTestSuite struct {

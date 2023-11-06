@@ -17,10 +17,10 @@ models:
     model: lab.weave.nl/weave/generator/gen/scalars.UUID
 
   PhoneNumberVerificationType:
-    model: lab.weave.nl/nid/nid-core/svc/wallet-gql/models.PhoneNumberVerificationType
+    model: github.com/nID-sourcecode/nid-core/svc/wallet-gql/models.PhoneNumberVerificationType
 
   Client:
-    model: lab.weave.nl/nid/nid-core/svc/wallet-gql/models.Client
+    model: github.com/nID-sourcecode/nid-core/svc/wallet-gql/models.Client
     fields:
       consents:
         resolver: true
@@ -28,7 +28,7 @@ models:
         resolver: true
   
   Consent:
-    model: lab.weave.nl/nid/nid-core/svc/wallet-gql/models.Consent
+    model: github.com/nID-sourcecode/nid-core/svc/wallet-gql/models.Consent
     fields:
       client:
         resolver: true
@@ -38,7 +38,7 @@ models:
         resolver: true
   
   Device:
-    model: lab.weave.nl/nid/nid-core/svc/wallet-gql/models.Device
+    model: github.com/nID-sourcecode/nid-core/svc/wallet-gql/models.Device
     fields:
       id:
         resolver: true
@@ -46,7 +46,7 @@ models:
         resolver: true
   
   EmailAddress:
-    model: lab.weave.nl/nid/nid-core/svc/wallet-gql/models.EmailAddress
+    model: github.com/nID-sourcecode/nid-core/svc/wallet-gql/models.EmailAddress
     fields:
       id:
         resolver: true
@@ -54,7 +54,7 @@ models:
         resolver: true
   
   PhoneNumber:
-    model: lab.weave.nl/nid/nid-core/svc/wallet-gql/models.PhoneNumber
+    model: github.com/nID-sourcecode/nid-core/svc/wallet-gql/models.PhoneNumber
     fields:
       id:
         resolver: true
@@ -62,7 +62,7 @@ models:
         resolver: true
   
   User:
-    model: lab.weave.nl/nid/nid-core/svc/wallet-gql/models.User
+    model: github.com/nID-sourcecode/nid-core/svc/wallet-gql/models.User
     fields:
       consents:
         resolver: true

@@ -1,5 +1,5 @@
 {{- if .Values.certificate }}
-apiVersion: cert-manager.io/v1alpha2
+apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
   name: example-wildcard-cert
@@ -17,15 +17,42 @@ spec:
 apiVersion: v1
 kind: Secret
 metadata:
+  {{- if .Values.gateway.mtls.trusted }}
+  name: {{.Values.gateway.mtls.secretName}}-cacert
+  {{- else }}
   name: {{.Values.gateway.mtls.secretName}}
+  {{- end }}
   namespace: istio-system
 type: Opaque
 stringData:
+  {{- if not .Values.gateway.mtls.trusted }}
   tls.key: |
 {{ indent 4 .Values.gateway.mtls.serverKey}}
   tls.crt: |
 {{ indent 4 .Values.gateway.mtls.serverCert}}
+  {{- end}}
   ca.crt: |
 {{ indent 4 .Values.gateway.mtls.caCert}}
+{{- end}}
+{{- if .Values.gateway.mtls.trusted }}
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: gateway-certs
+  namespace: istio-system
+spec:
+  secretName: {{.Values.gateway.mtls.secretName}}
+  issuerRef:
+    name: letsencrypt
+    kind: ClusterIssuer
+  dnsNames:
+  {{- if .Values.gateway.mtls.wildcard}}
+    - "*.{{ .Release.Namespace}}.{{ $.Values.basedomain }}"
+  {{- else}}
+  {{- range .Values.gateway.mtls.trustedDNS }}
+    - {{ . }}
+  {{- end }}
+  {{- end}}
 ---
 {{- end}}

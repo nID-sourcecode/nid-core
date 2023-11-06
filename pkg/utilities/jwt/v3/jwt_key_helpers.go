@@ -4,15 +4,15 @@ import (
 	"crypto/rsa"
 	"fmt"
 
-	jwtgo "github.com/dgrijalva/jwt-go"
+	jwtgo "github.com/golang-jwt/jwt/v5"
 
-	"lab.weave.nl/nid/nid-core/pkg/utilities/errors"
+	"github.com/nID-sourcecode/nid-core/pkg/utilities/errors"
 )
 
 // error declarations
 var (
-	ErrJWTPrivateNotFound error = fmt.Errorf("jwt private key not provided")
-	ErrJWTPublicNotFound  error = fmt.Errorf("jwt public key not provided")
+	ErrJWTPrivateNotFound = fmt.Errorf("jwt private key not provided")
+	ErrJWTPublicNotFound  = fmt.Errorf("jwt public key not provided")
 )
 
 // ParseKeys parse priv pub key pair as bytes

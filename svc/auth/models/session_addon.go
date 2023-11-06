@@ -1,13 +1,12 @@
 package models
 
 import (
-	"context"
 	"time"
 
 	"github.com/gofrs/uuid"
 	"github.com/jinzhu/gorm"
 
-	"lab.weave.nl/nid/nid-core/pkg/utilities/errors"
+	"github.com/nID-sourcecode/nid-core/pkg/utilities/errors"
 )
 
 // DefaultModel is a default representation of the model
@@ -30,19 +29,19 @@ func (m *SessionDB) DefaultModel(clientID, audienceID, redirectTargetID uuid.UUI
 }
 
 // BeforeUpdate sets authorization_code_granted_at date when code is set
-func (s *Session) BeforeUpdate(tx *gorm.DB) (err error) {
-	if s.AuthorizationCode != nil && s.AuthorizationCodeGrantedAt == nil {
+func (m *Session) BeforeUpdate(_ *gorm.DB) (err error) {
+	if m.AuthorizationCode != nil && m.AuthorizationCodeGrantedAt == nil {
 		grantedAt := time.Now()
-		s.AuthorizationCodeGrantedAt = &grantedAt
+		m.AuthorizationCodeGrantedAt = &grantedAt
 	}
 	return nil
 }
 
 // BeforeCreate sets authorization_code_granted_at date when code is set
-func (s *Session) BeforeCreate(tx *gorm.DB) (err error) {
-	if s.AuthorizationCode != nil {
+func (m *Session) BeforeCreate(_ *gorm.DB) (err error) {
+	if m.AuthorizationCode != nil {
 		grantedAt := time.Now()
-		s.AuthorizationCodeGrantedAt = &grantedAt
+		m.AuthorizationCodeGrantedAt = &grantedAt
 	}
 
 	return nil
@@ -66,13 +65,7 @@ const (
 	preloadAll                       PreloadOption = 2
 )
 
-// gRPC error definitions for not being able to retrieve token
-var (
-	ErrUnableToRetrieveTokenExpiration   = errors.New("error getting token, token request outside expiration time")
-	ErrUnableToRetrieveTokenInvalidState = errors.New("error getting token, session in incorrect state")
-)
-
-func (m *SessionDB) getSession(query *gorm.DB, preload PreloadOption, authorizationCodeExpirationTime time.Duration) (*Session, error) {
+func (m *SessionDB) getSession(query *gorm.DB, preload PreloadOption) (*Session, error) {
 	var session Session
 
 	// FIXME optimise this query (https://lab.weave.nl/twi/core/-/issues/107)
@@ -97,31 +90,22 @@ func (m *SessionDB) getSession(query *gorm.DB, preload PreloadOption, authorizat
 		return nil, err
 	}
 
-	if session.AuthorizationCodeGrantedAt != nil {
-		grantedAt := *session.AuthorizationCodeGrantedAt
-		deadline := grantedAt.Add(authorizationCodeExpirationTime)
-		now := time.Now()
-		if !(now.After(grantedAt) && now.Before(deadline)) {
-			return nil, ErrUnableToRetrieveTokenExpiration
-		}
-	}
-
 	return &session, nil
 }
 
 // GetSessionByID retrieves a session given it's ID
-func (m *SessionDB) GetSessionByID(ctx context.Context, option PreloadOption, id string, authorizationCodeExpirationTime time.Duration) (*Session, error) {
-	return m.getSession(m.Db.Where("id = ?", id), option, authorizationCodeExpirationTime)
+func (m *SessionDB) GetSessionByID(option PreloadOption, id string) (*Session, error) {
+	return m.getSession(m.Db.Where("id = ?", id), option)
 }
 
 // GetSessionByCodeAndClientID retrieves a session given it's authorization code and client ID
-func (m *SessionDB) GetSessionByCodeAndClientID(ctx context.Context, option PreloadOption, hash, clientID string, authorizationCodeExpirationTime time.Duration) (*Session, error) {
-	return m.getSession(m.Db.Where("authorization_code = ? AND client_id = ?", hash, clientID), option, authorizationCodeExpirationTime)
+func (m *SessionDB) GetSessionByCodeAndClientID(option PreloadOption, hash, clientID string) (*Session, error) {
+	return m.getSession(m.Db.Where("authorization_code = ? AND client_id = ?", hash, clientID), option)
 }
 
 // GetSessionByIDAndSubject retrieves a session given it's id and subject
-func (m *SessionDB) GetSessionByIDAndSubject(ctx context.Context, option PreloadOption, id, subject string, authorizationCodeExpirationTime time.Duration) (*Session, error) {
-	return m.getSession(m.Db.Where("id = ? AND subject = ?", id, subject), option, authorizationCodeExpirationTime)
+func (m *SessionDB) GetSessionByIDAndSubject(option PreloadOption, id, subject string) (*Session, error) {
+	return m.getSession(m.Db.Where("id = ? AND subject = ?", id, subject), option)
 }
 
 // UpdateAcceptedAccessModels updates the accepted access models
@@ -136,7 +120,7 @@ func (m *SessionDB) UpdateAcceptedAccessModels(session *Session, combinedAccessM
 
 // UpdateSessionState updates the state of a session
 func (m *SessionDB) UpdateSessionState(session *Session, state SessionState) error {
-	err := m.Db.Model(&session).Update("state", state).Error
+	err := m.Db.Model(&session).Select("state").Update(map[string]interface{}{"state": state}).Error
 	if err != nil {
 		return err
 	}

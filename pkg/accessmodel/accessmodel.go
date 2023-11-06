@@ -5,10 +5,9 @@ import (
 	"encoding/json"
 	goErr "errors"
 
-	"github.com/dgrijalva/jwt-go"
-
-	"lab.weave.nl/nid/nid-core/pkg/accessobject"
-	"lab.weave.nl/nid/nid-core/pkg/utilities/errors"
+	"github.com/golang-jwt/jwt"
+	"github.com/nID-sourcecode/nid-core/pkg/accessobject"
+	"github.com/nID-sourcecode/nid-core/pkg/utilities/errors"
 )
 
 // Type is an enum containing the possible types of access models
@@ -80,6 +79,8 @@ func (a *AccessModel) UnmarshalJSON(data []byte) error {
 
 type claims struct {
 	Scopes map[string]*AccessModel
+
+	jwt.Claims
 }
 
 func (*claims) Valid() error {
@@ -90,7 +91,9 @@ func (*claims) Valid() error {
 func ExtractScopesFromJWT(token string) (map[string]*AccessModel, error) {
 	var claims claims
 
-	jwtParser := jwt.Parser{}
+	jwtParser := jwt.Parser{
+		SkipClaimsValidation: true,
+	}
 	if _, _, err := jwtParser.ParseUnverified(token, &claims); err != nil {
 		return nil, errors.Wrap(err, "unable to parse unverified token")
 	}

@@ -1,0 +1,382 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "well_known.proto",
+    "version": "version not set"
+  },
+  "tags": [
+    {
+      "name": "WellKnown"
+    }
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/.well-known/oauth-authorization-server": {
+      "get": {
+        "operationId": "WellKnown_GetWellKnownOAuthAuthorizationServer",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/authWellKnownResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "tags": [
+          "WellKnown"
+        ]
+      }
+    },
+    "/.well-known/openid-configuration": {
+      "get": {
+        "summary": "Well known openID configuration\nRFC 8615 - Well-Known Uniform Resource Identifiers (URIs) -\n  https://tools.ietf.org/html/rfc8615\nOpenID Connect Discovery 1.0 -\n  https://openid.net/specs/openid-connect-discovery-1_0.html",
+        "operationId": "WellKnown_GetWellKnownOpenIDConfiguration",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/authWellKnownResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "tags": [
+          "WellKnown"
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "authWellKnownResponse": {
+      "type": "object",
+      "properties": {
+        "issuer": {
+          "type": "string",
+          "description": "REQUIRED. The authorization server's issuer identifier, which is a URL that\n  uses the \"https\" scheme and has no query or fragment components.\nNote:  Authorization server metadata is published at a location that is\n  \".well-known\" according to RFC 5785 [RFC5785] derived from this issuer\n  identifier, as described in Section 3. The issuer identifier is used to\n  prevent authorization server mix- up attacks, as described in \"OAuth 2.0\n  Mix-Up Mitigation\" [MIX-UP]."
+        },
+        "authorizationEndpoint": {
+          "type": "string",
+          "description": "REQUIRED. URL of the authorization server's authorization endpoint\n  [RFC6749] [OpenID.Core]."
+        },
+        "tokenEndpoint": {
+          "type": "string",
+          "description": "COMPLEX. URL of the authorization server's token endpoint [RFC6749]\n  [OpenID.Core].\nNote:  This is REQUIRED unless only the implicit grant type is supported."
+        },
+        "jwksUri": {
+          "type": "string",
+          "description": "REQUIRED. URL of the authorization server's JWK Set [JWK] document.\nNote:  The referenced document contains the signing key(s) the client uses\n  to validate signatures from the authorization server. This URL MUST use\n  the \"https\" scheme. The JWK Set MAY also contain the server's encryption\n  key or keys, which are used by clients to encrypt requests to the server.\n  When both signing and encryption keys are made available, a \"use\" (public\n  key use) parameter value is REQUIRED for all keys in the referenced JWK\n  Set to indicate each key's intended usage."
+        },
+        "registrationEndpoint": {
+          "type": "string",
+          "description": "RECOMMENDED. URL of the authorization server's OAuth 2.0 Dynamic Client\n  Registration endpoint [RFC7591] [OpenID.Registration]."
+        },
+        "scopesSupported": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "RECOMMENDED. List of the OAuth 2.0 [RFC6749] \"scope\" values that this\n  authorization server supports.\nNote:  Servers MAY choose not to advertise some supported scope values even\n  when this parameter is used.\nprotolint:disable:next REPEATED_FIELD_NAMES_PLURALIZED"
+        },
+        "responseTypesSupported": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "REQUIRED. List of the OAuth 2.0 \"response_type\" values that this\n  authorization server supports.\nNote:  The array values used are the same as those used with the\n  \"response_types\" parameter defined by \"OAuth 2.0 Dynamic Client\n  Registration Protocol\" [RFC7591]. Dynamic OpenID Providers MUST support\n  the code, id_token, and the token id_token Response Type values\n  [OpenID.Core].\nprotolint:disable:next REPEATED_FIELD_NAMES_PLURALIZED"
+        },
+        "responseModesSupported": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "OPTIONAL. List of the OAuth 2.0 \"response_mode\" values that this\n  authorization server supports, as specified in \"OAuth 2.0 Multiple\n  Response Type Encoding Practices\" [OAuth.Responses].\nNote:  If omitted, the default is \"[\"query\", \"fragment\"]\". The response\n  mode value \"form_post\" is also defined in \"OAuth 2.0 Form Post Response\n  Mode\" [OAuth.Post].\nprotolint:disable:next REPEATED_FIELD_NAMES_PLURALIZED"
+        },
+        "grantTypesSupported": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "OPTIONAL. List of the OAuth 2.0 grant type values that this authorization\n  server supports.\nNote:  The array values used are the same as those used with the\n  \"grant_types\" parameter defined by \"OAuth 2.0 Dynamic Client Registration\n  Protocol\" [RFC7591]. If omitted, the default value is\n  \"[\"authorization_code\", \"implicit\"]\".\nprotolint:disable:next REPEATED_FIELD_NAMES_PLURALIZED"
+        },
+        "tokenEndpointAuthMethodsSupported": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "OPTIONAL. List of client authentication methods supported by this token\n  endpoint.\nNote:  Client authentication method values are used in the\n  \"token_endpoint_auth_method\" parameter defined in Section 2 of [RFC7591].\n  The options are client_secret_post, client_secret_basic,\n  client_secret_jwt, and private_key_jwt, as described in Section 9 of\n  OpenID Connect Core 1.0 [OpenID.Core]. Other authentication methods MAY\n  be defined by extensions. If omitted, the default is\n  \"client_secret_basic\" -- the HTTP Basic Authentication Scheme specified\n  in Section 2.3.1 of OAuth 2.0 [RFC6749].\nprotolint:disable:next REPEATED_FIELD_NAMES_PLURALIZED"
+        },
+        "tokenEndpointAuthSigningAlgValuesSupported": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "OPTIONAL. List of the JWS signing algorithms (\"alg\" values) supported by\n  the token endpoint for the signature on the JWT [JWT] used to\n  authenticate the client at the token endpoint for the \"private_key_jwt\"\n  and \"client_secret_jwt\" authentication methods.\nNote:  This metadata entry MUST be present if either of these\n  authentication methods are specified in the\n  \"token_endpoint_auth_methods_supported\" entry. No default algorithms are\n  implied if this entry is omitted. Servers SHOULD support \"RS256\". The\n  value \"none\" MUST NOT be used.\nprotolint:disable:next REPEATED_FIELD_NAMES_PLURALIZED"
+        },
+        "serviceDocumentation": {
+          "type": "string",
+          "description": "OPTIONAL. URL of a page containing human-readable information that\n  developers might want or need to know when using the authorization\n  server.\nNote:  In particular, if the authorization server does not support Dynamic\n  Client Registration, then information on how to register clients needs to\n  be provided in this documentation."
+        },
+        "uiLocalesSupported": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "OPTIONAL. Languages and scripts supported for the user interface,\n  represented as a JSON array of language tag values from BCP 47 [RFC5646].\nNote:  If omitted, the set of supported languages and scripts is\n  unspecified.\nprotolint:disable:next REPEATED_FIELD_NAMES_PLURALIZED"
+        },
+        "opPolicyUri": {
+          "type": "string",
+          "description": "OPTIONAL. URL that the authorization server provides to the person\n  registering the client to read about the authorization server's\n  requirements on how the client can use the data provided by the\n  authorization server.\nNote:  The registration process SHOULD display this URL to the person\n  registering the client if it is given. As described in Section 5, despite\n  the identifier \"op_policy_uri\" appearing to be OpenID-specific, its usage\n  in this specification is actually referring to a general OAuth 2.0\n  feature that is not specific to OpenID Connect."
+        },
+        "opTosUri": {
+          "type": "string",
+          "description": "OPTIONAL. URL that the authorization server provides to the person\n  registering the client to read about the authorization server's terms of\n  service.\nNote:  The registration process SHOULD display this URL to the person\n  registering the client if it is given. As described in Section 5, despite\n  the identifier \"op_tos_uri\", appearing to be OpenID-specific, its usage\n  in this specification is actually referring to a general OAuth 2.0\n  feature that is not specific to OpenID Connect."
+        },
+        "revocationEndpoint": {
+          "type": "string",
+          "description": "OPTIONAL. URL of the authorization server's OAuth 2.0 revocation endpoint\n  [RFC7009]."
+        },
+        "revocationEndpointAuthMethodsSupported": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "OPTIONAL. List of client authentication methods supported by this\n  revocation endpoint.\nNote:  The valid client authentication method values are those registered\n  in the IANA \"OAuth Token Endpoint Authentication Methods\" registry\n  [IANA.OAuth.Parameters]. If omitted, the default is \"client_secret_basic\"\n  -- the HTTP Basic Authentication Scheme specified in Section 2.3.1 of\n  OAuth 2.0 [RFC6749].\nprotolint:disable:next REPEATED_FIELD_NAMES_PLURALIZED"
+        },
+        "revocationEndpointAuthSigningAlgValuesSupported": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "OPTIONAL. List of the JWS signing algorithms (\"alg\" values) supported by\n  the revocation endpoint for the signature on the JWT [JWT] used to\n  authenticate the client at the revocation endpoint for the\n  \"private_key_jwt\" and \"client_secret_jwt\" authentication methods.\nNote:  This metadata entry MUST be present if either of these\n  authentication methods are specified in the\n  \"revocation_endpoint_auth_methods_supported\" entry. No default algorithms\n  are implied if this entry is omitted. The value \"none\" MUST NOT be used.\nprotolint:disable:next REPEATED_FIELD_NAMES_PLURALIZED"
+        },
+        "introspectionEndpoint": {
+          "type": "string",
+          "description": "OPTIONAL. URL of the authorization server's OAuth 2.0 introspection\n  endpoint [RFC7662]."
+        },
+        "introspectionEndpointAuthMethodsSupported": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "OPTIONAL. List of client authentication methods supported by this\n  introspection endpoint.\nNote:  The valid client authentication method values are those registered\n  in the IANA \"OAuth Token Endpoint Authentication Methods\" registry\n  [IANA.OAuth.Parameters] or those registered in the IANA \"OAuth Access\n  Token Types\" registry [IANA.OAuth.Parameters]. (These values are and will\n  remain distinct, due to Section 7.2.) If omitted, the set of supported\n  authentication methods MUST be determined by other means.\nprotolint:disable:next REPEATED_FIELD_NAMES_PLURALIZED"
+        },
+        "introspectionEndpointAuthSigningAlgValuesSupported": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "OPTIONAL. List of the JWS signing algorithms (\"alg\" values) supported by\n  the introspection endpoint for the signature on the JWT [JWT] used to\n  authenticate the client at the introspection endpoint for the\n  \"private_key_jwt\" and \"client_secret_jwt\" authentication methods.\nNote:  This metadata entry MUST be present if either of these\n  authentication methods are specified in the\n  \"introspection_endpoint_auth_methods_supported\" entry. No default\n  algorithms are implied if this entry is omitted. The value \"none\" MUST\n  NOT be used.\nprotolint:disable:next REPEATED_FIELD_NAMES_PLURALIZED"
+        },
+        "codeChallengeMethodsSupported": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "OPTIONAL. List of Proof Key for Code Exchange (PKCE) [RFC7636] code\n  challenge methods supported by this authorization server.\nNote:  Code challenge method values are used in the \"code_challenge_method\"\n  parameter defined in Section 4.3 of [RFC7636]. The valid code challenge\n  method values are those registered in the IANA \"PKCE Code Challenge\n  Methods\" registry [IANA.OAuth.Parameters]. If omitted, the authorization\n  server does not support PKCE.\nprotolint:disable:next REPEATED_FIELD_NAMES_PLURALIZED"
+        },
+        "signedMetadata": {
+          "type": "string",
+          "description": "OPTIONAL. A JWT containing metadata values about the authorization server\n  as claims.\nNote:  This is a string value consisting of the entire signed JWT. A\n  \"signed_metadata\" metadata value SHOULD NOT appear as a claim in the JWT."
+        },
+        "userinfoEndpoint": {
+          "type": "string",
+          "description": "RECOMMENDED. URL of the authorization server's UserInfo Endpoint\n  [OpenID.Core].\nNote:  This URL MUST use the https scheme and MAY contain port, path, and\n  query parameter components."
+        },
+        "acrValuesSupported": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "OPTIONAL. List of the Authentication Context Class References that this\n  authorization server supports.\nprotolint:disable:next REPEATED_FIELD_NAMES_PLURALIZED"
+        },
+        "subjectTypesSupported": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "REQUIRED. List of the Subject Identifier types that this authorization\n  server supports.\nNote:  Valid types include pairwise and public.\nprotolint:disable:next REPEATED_FIELD_NAMES_PLURALIZED"
+        },
+        "idTokenSigningAlgValuesSupported": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "REQUIRED. List of the JWS signing algorithms (alg values) supported by the\n  authorization server for the ID Token to encode the Claims in a JWT\n  [JWT].\nNote:  The algorithm RS256 MUST be included. The value none MAY be\n  supported, but MUST NOT be used unless the Response Type used returns no\n  ID Token from the Authorization Endpoint (such as when using the\n  Authorization Code Flow).\nprotolint:disable:next REPEATED_FIELD_NAMES_PLURALIZED"
+        },
+        "idTokenEncryptionAlgValuesSupported": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "OPTIONAL. List of the JWE encryption algorithms (alg values) supported by\n  the authorization server for the ID Token to encode the Claims in a JWT\n  [JWT].\nprotolint:disable:next REPEATED_FIELD_NAMES_PLURALIZED"
+        },
+        "idTokenEncryptionEncValuesSupported": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "OPTIONAL. List of the JWE encryption algorithms (enc values) supported by\n  the authorization server for the ID Token to encode the Claims in a JWT\n  [JWT].\nprotolint:disable:next REPEATED_FIELD_NAMES_PLURALIZED"
+        },
+        "userinfoSigningAlgValuesSupported": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "OPTIONAL. List of the JWS [JWS] signing algorithms (alg values) [JWA]\n  supported by the UserInfo Endpoint to encode the Claims in a JWT [JWT].\nNote:  The value none MAY be included.\nprotolint:disable:next REPEATED_FIELD_NAMES_PLURALIZED"
+        },
+        "userinfoEncryptionAlgValuesSupported": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "OPTIONAL. List of the JWE [JWE] encryption algorithms (alg values) [JWA]\n  supported by the UserInfo Endpoint to encode the Claims in a JWT [JWT].\nprotolint:disable:next REPEATED_FIELD_NAMES_PLURALIZED"
+        },
+        "userinfoEncryptionEncValuesSupported": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "OPTIONAL. List of the JWE encryption algorithms (enc values) [JWA]\n  supported by the UserInfo Endpoint to encode the Claims in a JWT [JWT].\nprotolint:disable:next REPEATED_FIELD_NAMES_PLURALIZED"
+        },
+        "requestObjectSigningAlgValuesSupported": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "OPTIONAL. List of the JWS signing algorithms (alg values) supported by the\n  authorization server for Request Objects, which are described in Section\n  6.1 of OpenID Connect Core 1.0 [OpenID.Core].\nNote:  These algorithms are used both when the Request Object is passed by\n  value (using the request parameter) and when it is passed by reference\n  (using the request_uri parameter). Servers SHOULD support none and RS256.\nprotolint:disable:next REPEATED_FIELD_NAMES_PLURALIZED"
+        },
+        "requestObjectEncryptionAlgValuesSupported": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "OPTIONAL. List of the JWE encryption algorithms (alg values) supported by\n  the authorization server for Request Objects.\nNote:  These algorithms are used both when the Request Object is passed by\n  value and when it is passed by reference.\nprotolint:disable:next REPEATED_FIELD_NAMES_PLURALIZED"
+        },
+        "requestObjectEncryptionEncValuesSupported": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "OPTIONAL. List of the JWE encryption algorithms (enc values) supported by\n  the authorization server for Request Objects.\nNote:  These algorithms are used both when the Request Object is passed by\n  value and when it is passed by reference.\nprotolint:disable:next REPEATED_FIELD_NAMES_PLURALIZED"
+        },
+        "displayValuesSupported": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "OPTIONAL. List of the display parameter values that the OpenID Provider\n  supports.\nNote:  These values are described in Section 3.1.2.1 of OpenID Connect Core\n  1.0 [OpenID.Core].\nprotolint:disable:next REPEATED_FIELD_NAMES_PLURALIZED"
+        },
+        "claimTypesSupported": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "OPTIONAL. List of the Claim Types that the OpenID Provider supports.\nNote:  These Claim Types are described in Section 5.6 of OpenID Connect\n  Core 1.0 [OpenID.Core]. Values defined by this specification are normal,\n  aggregated, and distributed. If omitted, the implementation supports only\n  normal Claims.\nprotolint:disable:next REPEATED_FIELD_NAMES_PLURALIZED"
+        },
+        "claimsSupported": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "RECOMMENDED. List of the Claim Names of the Claims that the OpenID Provider\n  MAY be able to supply values for.\nNote:  Note that for privacy or other reasons, this might not be an\n  exhaustive list.\nprotolint:disable:next REPEATED_FIELD_NAMES_PLURALIZED"
+        },
+        "claimsLocalesSupported": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "OPTIONAL. Languages and scripts supported for values in Claims being\n  returned, represented as a JSON array of BCP47 [RFC5646] language tag\n  values.\nNote:  Not all languages and scripts are necessarily supported for all\n  Claim values.\nprotolint:disable:next REPEATED_FIELD_NAMES_PLURALIZED"
+        },
+        "claimsParameterSupported": {
+          "type": "boolean",
+          "description": "OPTIONAL. Boolean value specifying whether the authorization server\n  supports use of the claims parameter, with true indicating support.\nNote:  If omitted, the default value is false."
+        },
+        "requestParameterSupported": {
+          "type": "boolean",
+          "description": "OPTIONAL. Boolean value specifying whether the authorization server\n  supports use of the request parameter, with true indicating support.\nNote:  If omitted, the default value is false."
+        },
+        "requestUriParameterSupported": {
+          "type": "boolean",
+          "description": "OPTIONAL. Boolean value specifying whether the authorization server\n  supports use of the request_uri parameter, with true indicating support.\nNote:  If omitted, the default value is true."
+        },
+        "requireRequestUriRegistration": {
+          "type": "boolean",
+          "description": "OPTIONAL. Boolean value specifying whether the authorization server\n  requires any request_uri values used to be pre-registered using the\n  request_uris registration parameter.\nNote:  Pre-registration is REQUIRED when the value is true. If omitted, the\n  default value is false."
+        },
+        "checkSessionIframe": {
+          "type": "string",
+          "description": "OPTIONAL. URL of an authorization server iframe that supports cross-origin\n  communications for session state information with the RP Client, using\n  the HTML5 postMessage API.\nNote:  This URL MUST use the https scheme and MAY contain port, path, and\n  query parameter components. The page is loaded from an invisible iframe\n  embedded in an RP page so that it can run in the authorization server's\n  security context. It accepts postMessage requests from the relevant RP\n  iframe and uses postMessage to post back the login status of the End-User\n  at the OP."
+        },
+        "frontchannelLogoutSupported": {
+          "type": "boolean",
+          "description": "OPTIONAL. Boolean value specifying whether the authorization server\n  supports HTTP-based logout, with true indicating support.\nNote:  If omitted, the default value is false."
+        },
+        "frontchannelLogoutSessionSupported": {
+          "type": "boolean",
+          "description": "OPTIONAL. Boolean value specifying whether the authorization server can\n  pass iss (issuer) and sid (session ID) query parameters to identify the\n  RP session with the authorization server when the frontchannel_logout_uri\n  is used.\nNote:  If supported, the sid Claim is also included in ID Tokens issued by\n  the OP. If omitted, the default value is false."
+        },
+        "backchannelLogoutSupported": {
+          "type": "boolean",
+          "description": "OPTIONAL. Boolean value specifying whether the authorization server\n  supports back-channel logout, with true indicating support.\nNote:  If omitted, the default value is false."
+        },
+        "backchannelLogoutSessionSupported": {
+          "type": "boolean",
+          "description": "OPTIONAL. Boolean value specifying whether the authorization server can\n  pass a sid (session ID) Claim in the Logout Token to identify the RP\n  session with the OP. If supported, the sid Claim is also included in ID\n  Tokens issued by the OP.\nNote:  If omitted, the default value is false."
+        }
+      }
+    },
+    "protobufAny": {
+      "type": "object",
+      "properties": {
+        "typeUrl": {
+          "type": "string",
+          "description": "A URL/resource name that uniquely identifies the type of the serialized\nprotocol buffer message. The last segment of the URL's path must represent\nthe fully qualified name of the type (as in\n`path/google.protobuf.Duration`). The name should be in a canonical form\n(e.g., leading \".\" is not accepted).\n\nIn practice, teams usually precompile into the binary all types that they\nexpect it to use in the context of Any. However, for URLs which use the\nscheme `http`, `https`, or no scheme, one can optionally set up a type\nserver that maps type URLs to message definitions as follows:\n\n* If no scheme is provided, `https` is assumed.\n* An HTTP GET on the URL must yield a [google.protobuf.Type][]\n  value in binary format, or produce an error.\n* Applications are allowed to cache lookup results based on the\n  URL, or have them precompiled into a binary to avoid any\n  lookup. Therefore, binary compatibility needs to be preserved\n  on changes to types. (Use versioned type names to manage\n  breaking changes.)\n\nNote: this functionality is not currently available in the official\nprotobuf release, and it is not used for type URLs beginning with\ntype.googleapis.com.\n\nSchemes other than `http`, `https` (or the empty scheme) might be\nused with implementation specific semantics."
+        },
+        "value": {
+          "type": "string",
+          "format": "byte",
+          "description": "Must be a valid serialized protocol buffer of the above specified type."
+        }
+      },
+      "description": "`Any` contains an arbitrary serialized protocol buffer message along with a\nURL that describes the type of the serialized message.\n\nProtobuf library provides support to pack/unpack Any values in the form\nof utility functions or additional generated methods of the Any type.\n\nExample 1: Pack and unpack a message in C++.\n\n    Foo foo = ...;\n    Any any;\n    any.PackFrom(foo);\n    ...\n    if (any.UnpackTo(\u0026foo)) {\n      ...\n    }\n\nExample 2: Pack and unpack a message in Java.\n\n    Foo foo = ...;\n    Any any = Any.pack(foo);\n    ...\n    if (any.is(Foo.class)) {\n      foo = any.unpack(Foo.class);\n    }\n\n Example 3: Pack and unpack a message in Python.\n\n    foo = Foo(...)\n    any = Any()\n    any.Pack(foo)\n    ...\n    if any.Is(Foo.DESCRIPTOR):\n      any.Unpack(foo)\n      ...\n\n Example 4: Pack and unpack a message in Go\n\n     foo := \u0026pb.Foo{...}\n     any, err := ptypes.MarshalAny(foo)\n     ...\n     foo := \u0026pb.Foo{}\n     if err := ptypes.UnmarshalAny(any, foo); err != nil {\n       ...\n     }\n\nThe pack methods provided by protobuf library will by default use\n'type.googleapis.com/full.type.name' as the type URL and the unpack\nmethods only use the fully qualified type name after the last '/'\nin the type URL, for example \"foo.bar.com/x/y.z\" will yield type\nname \"y.z\".\n\n\nJSON\n====\nThe JSON representation of an `Any` value uses the regular\nrepresentation of the deserialized, embedded message, with an\nadditional field `@type` which contains the type URL. Example:\n\n    package google.profile;\n    message Person {\n      string first_name = 1;\n      string last_name = 2;\n    }\n\n    {\n      \"@type\": \"type.googleapis.com/google.profile.Person\",\n      \"firstName\": \u003cstring\u003e,\n      \"lastName\": \u003cstring\u003e\n    }\n\nIf the embedded message type is well-known and has a custom JSON\nrepresentation, that representation will be embedded adding a field\n`value` which holds the custom JSON in addition to the `@type`\nfield. Example (for message [google.protobuf.Duration][]):\n\n    {\n      \"@type\": \"type.googleapis.com/google.protobuf.Duration\",\n      \"value\": \"1.212s\"\n    }"
+    },
+    "rpcStatus": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32",
+          "description": "The status code, which should be an enum value of [google.rpc.Code][google.rpc.Code]."
+        },
+        "message": {
+          "type": "string",
+          "description": "A developer-facing error message, which should be in English. Any\nuser-facing error message should be localized and sent in the\n[google.rpc.Status.details][google.rpc.Status.details] field, or localized by the client."
+        },
+        "details": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/protobufAny"
+          },
+          "description": "A list of messages that carry the error details.  There is a common set of\nmessage types for APIs to use."
+        }
+      },
+      "description": "The `Status` type defines a logical error model that is suitable for\ndifferent programming environments, including REST APIs and RPC APIs. It is\nused by [gRPC](https://github.com/grpc). Each `Status` message contains\nthree pieces of data: error code, error message, and error details.\n\nYou can find out more about this error model and how to work with it in the\n[API Design Guide](https://cloud.google.com/apis/design/errors)."
+    }
+  }
+}

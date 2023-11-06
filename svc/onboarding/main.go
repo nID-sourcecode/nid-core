@@ -1,18 +1,20 @@
+// Package onboarding
 package main
 
 import (
+	"github.com/nID-sourcecode/nid-core/pkg/gqlclient"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/vrischmann/envconfig"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 
-	"lab.weave.nl/nid/nid-core/pkg/utilities/gqlclient"
-	"lab.weave.nl/nid/nid-core/pkg/utilities/grpcserver"
-	"lab.weave.nl/nid/nid-core/pkg/utilities/grpcserver/headers"
-	"lab.weave.nl/nid/nid-core/pkg/utilities/grpcserver/metrics"
-	"lab.weave.nl/nid/nid-core/pkg/utilities/grpcserver/servicebase"
-	"lab.weave.nl/nid/nid-core/pkg/utilities/log/v2"
-	onboardingPB "lab.weave.nl/nid/nid-core/svc/onboarding/proto"
-	pseudoPB "lab.weave.nl/nid/nid-core/svc/pseudonymization/proto"
+	"github.com/nID-sourcecode/nid-core/pkg/utilities/grpcserver"
+	"github.com/nID-sourcecode/nid-core/pkg/utilities/grpcserver/headers"
+	"github.com/nID-sourcecode/nid-core/pkg/utilities/grpcserver/metrics"
+	"github.com/nID-sourcecode/nid-core/pkg/utilities/grpcserver/servicebase"
+	"github.com/nID-sourcecode/nid-core/pkg/utilities/log/v2"
+	onboardingPB "github.com/nID-sourcecode/nid-core/svc/onboarding/proto"
+	pseudoPB "github.com/nID-sourcecode/nid-core/svc/pseudonymization/proto"
 )
 
 func initialise() (*OnboardingServiceRegistry, *OnboardingConfig) {
@@ -26,7 +28,7 @@ func initialise() (*OnboardingServiceRegistry, *OnboardingConfig) {
 		log.WithError(err).Fatal("unable to set log format")
 	}
 
-	connection, err := grpc.Dial(config.PseudonymizationURL, grpc.WithInsecure())
+	connection, err := grpc.Dial(config.PseudonymizationURL, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		log.WithError(err).WithField("url", config.PseudonymizationURL).Fatal("unable to dial pseudonymization service")
 	}
@@ -55,7 +57,7 @@ func main() {
 	grpcConfig.Port = conf.Port
 	grpcConfig.LogLevel = conf.GetLogLevel()
 	grpcConfig.LogFormatter = conf.GetLogFormatter()
-	err := grpcserver.InitWithConf(registry, grpcConfig)
+	err := grpcserver.InitWithConf(registry, &grpcConfig)
 	if err != nil {
 		log.WithError(err).Fatal("Error initialising grpc server")
 	}

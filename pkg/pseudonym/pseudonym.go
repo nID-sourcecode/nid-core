@@ -7,12 +7,14 @@ import (
 	"fmt"
 	"os"
 
+	"google.golang.org/grpc/credentials/insecure"
+
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
 
-	"lab.weave.nl/nid/nid-core/pkg/utilities/errors"
-	"lab.weave.nl/nid/nid-core/pkg/utilities/log/v2"
-	pb "lab.weave.nl/nid/nid-core/svc/pseudonymization/proto"
+	"github.com/nID-sourcecode/nid-core/pkg/utilities/errors"
+	"github.com/nID-sourcecode/nid-core/pkg/utilities/log/v2"
+	pb "github.com/nID-sourcecode/nid-core/svc/pseudonymization/proto"
 )
 
 // Only for non-istio debug purposes
@@ -46,7 +48,7 @@ func NewPseudonymizer(location string) Pseudonymizer {
 }
 
 func (w pseudonymizer) GetPseudonym(ctx context.Context, myPseudo, targetNamespace string) (string, error) {
-	conn, err := grpc.Dial(w.location, grpc.WithInsecure())
+	conn, err := grpc.Dial(w.location, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		return "", errors.Wrap(err, "unable to dial pseudonym service")
 	}
@@ -73,7 +75,7 @@ func (w pseudonymizer) GetPseudonym(ctx context.Context, myPseudo, targetNamespa
 }
 
 func (w pseudonymizer) GeneratePseudonym(ctx context.Context, amount uint32) ([]string, error) {
-	conn, err := grpc.Dial(w.location, grpc.WithInsecure())
+	conn, err := grpc.Dial(w.location, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to dial pseudonym service")
 	}

@@ -4,26 +4,21 @@ package jwt
 import (
 	"crypto/rsa"
 	"fmt"
-	"time"
 
-	jwtgo "github.com/dgrijalva/jwt-go"
+	jwtgo "github.com/golang-jwt/jwt/v5"
 )
 
-// Duration constants
-const (
-	DurationDay = time.Hour * 24
-)
-
-// error defininitions
+// error definitions
 var (
-	ErrIncorrectBearerLength error = fmt.Errorf("incorrect bearer length")
-	ErrInvalidToken          error = fmt.Errorf("invalid token")
+	ErrIncorrectBearerLength = fmt.Errorf("incorrect bearer length")
+	ErrInvalidToken          = fmt.Errorf("invalid token")
 )
 
-// ClientOpts options for signin JWT keys
+// ClientOpts options for signing JWT keys
 type ClientOpts struct {
-	HeaderOpts   HeaderOpts
-	SigninMethod jwtgo.SigningMethod
+	MarshalSingleStringAsArray bool
+	HeaderOpts                 HeaderOpts
+	SigningMethod              jwtgo.SigningMethod
 }
 
 // HeaderOpts options for header
@@ -36,18 +31,14 @@ type HeaderOpts struct {
 // DefaultOpts creates new default JWT options
 func DefaultOpts() *ClientOpts {
 	return &ClientOpts{
-		SigninMethod: jwtgo.SigningMethodRS256,
+		MarshalSingleStringAsArray: false,
+		SigningMethod:              jwtgo.SigningMethodRS256,
 		HeaderOpts: HeaderOpts{
 			Type: "JWT",
 			Alg:  jwtgo.SigningMethodRS256.Alg(),
 			KID:  "1",
 		},
 	}
-}
-
-// NewJWTClient returns a new JWT client
-func NewJWTClient(privKey *rsa.PrivateKey, pubKey *rsa.PublicKey) *Client {
-	return NewJWTClientWithOpts(privKey, pubKey, DefaultOpts())
 }
 
 // NewJWTClientWithOpts returns a new JWT client with specified options
@@ -59,24 +50,11 @@ func NewJWTClientWithOpts(privKey *rsa.PrivateKey, pubKey *rsa.PublicKey, opts *
 	}
 }
 
-// Client client for signin JWT tokens
+// Client client for signing JWT tokens
 type Client struct {
 	Opts    *ClientOpts
 	PrivKey *rsa.PrivateKey
 	PubKey  *rsa.PublicKey
-}
-
-// NewPubKeyClient returns a new JWT public key client
-func NewPubKeyClient(pubKey *rsa.PublicKey) *PubKeyClient {
-	return NewPubKeyClientWithOpts(pubKey, DefaultOpts())
-}
-
-// NewPubKeyClientWithOpts returns a new JWT public key client with specified options
-func NewPubKeyClientWithOpts(pubKey *rsa.PublicKey, opts *ClientOpts) *PubKeyClient {
-	return &PubKeyClient{
-		PubKey: pubKey,
-		Opts:   opts,
-	}
 }
 
 // PubKeyClient client for public key tokens
@@ -90,13 +68,13 @@ func (c *Client) PublicKey() *rsa.PublicKey {
 	return c.PubKey
 }
 
-// PrivateKey return the priate key
+// PrivateKey return the private key
 func (c *Client) PrivateKey() *rsa.PrivateKey {
 	return c.PrivKey
 }
 
 // ValidateAndParseClaims returns the claims for a jwt token.
-func (c *Client) ValidateAndParseClaims(bearer string, claims Claims) error {
+func (c *Client) ValidateAndParseClaims(bearer string, claims jwtgo.Claims) error {
 	_, err := c.validateAndParseToken(bearer, claims)
 	if err != nil {
 		return err
@@ -105,7 +83,7 @@ func (c *Client) ValidateAndParseClaims(bearer string, claims Claims) error {
 }
 
 // validateAndParseToken parse a jwt string token
-func (c *Client) validateAndParseToken(bearer string, claims Claims) (*jwtgo.Token, error) {
+func (c *Client) validateAndParseToken(bearer string, claims jwtgo.Claims) (*jwtgo.Token, error) {
 	if len(bearer) == 0 {
 		return nil, ErrIncorrectBearerLength
 	}
@@ -123,9 +101,27 @@ func (c *Client) validateAndParseToken(bearer string, claims Claims) (*jwtgo.Tok
 	)
 }
 
+// ParseWithClaims validates string token and parses it to a token and claims if validation has passed through.
+func (c *Client) ParseWithClaims(token string) (*jwtgo.Token, *DefaultClaims, error) {
+	claims := &DefaultClaims{}
+	parsedToken, err := jwtgo.ParseWithClaims(token, claims, func(token *jwtgo.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwtgo.SigningMethodRSA); !ok {
+			return nil, ErrInvalidToken
+		}
+
+		return c.PrivKey.Public(), nil
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return parsedToken, claims, nil
+}
+
 // SignToken signs a token
-func (c *Client) SignToken(claims Claims) (string, error) {
-	token := jwtgo.NewWithClaims(c.Opts.SigninMethod, claims)
+func (c *Client) SignToken(claims jwtgo.Claims) (string, error) {
+	jwtgo.MarshalSingleStringAsArray = c.Opts.MarshalSingleStringAsArray
+	token := jwtgo.NewWithClaims(c.Opts.SigningMethod, claims)
 
 	token.Header = map[string]interface{}{
 		"typ": c.Opts.HeaderOpts.Type,

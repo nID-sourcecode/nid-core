@@ -5,12 +5,13 @@ import (
 	"encoding/json"
 	"net/url"
 
-	"github.com/dvsekhvalnov/jose2go/base64url"
-	"github.com/golang/protobuf/ptypes/empty"
+	"google.golang.org/protobuf/types/known/emptypb"
 
-	grpcerrors "lab.weave.nl/nid/nid-core/pkg/utilities/grpcserver/errors"
-	"lab.weave.nl/nid/nid-core/pkg/utilities/log/v2"
-	pb "lab.weave.nl/nid/nid-core/svc/auditlog/proto"
+	"github.com/dvsekhvalnov/jose2go/base64url"
+
+	grpcerrors "github.com/nID-sourcecode/nid-core/pkg/utilities/grpcserver/errors"
+	"github.com/nID-sourcecode/nid-core/pkg/utilities/log/v2"
+	pb "github.com/nID-sourcecode/nid-core/svc/auditlog/proto"
 )
 
 // AuditLogServiceServer implements the proto.AuditLogServiceServer interface
@@ -21,7 +22,7 @@ type AuditLogServiceServer struct {
 }
 
 // LogRequest implements the LogRequest grpc call, it simply logs the request message it receives
-func (a *AuditLogServiceServer) LogRequest(ctx context.Context, request *pb.Request) (*empty.Empty, error) {
+func (a *AuditLogServiceServer) LogRequest(_ context.Context, request *pb.Request) (*emptypb.Empty, error) {
 	var claims interface{}
 	auth := request.GetAuth()
 	if len(auth) > 0 {
@@ -43,17 +44,17 @@ func (a *AuditLogServiceServer) LogRequest(ctx context.Context, request *pb.Requ
 		"request_id":  request.GetRequestId(),
 	}).Info("received response")
 
-	return &empty.Empty{}, nil
+	return &emptypb.Empty{}, nil
 }
 
 // LogResponse auditlogs a response (designed to be called from the auditlog filter)
-func (a *AuditLogServiceServer) LogResponse(ctx context.Context, response *pb.Response) (*empty.Empty, error) {
+func (a *AuditLogServiceServer) LogResponse(_ context.Context, response *pb.Response) (*emptypb.Empty, error) {
 	a.logger.WithFields(log.Fields{
 		"request_id":  response.RequestId,
 		"status_code": response.StatusCode,
 	}).Info("received request")
 
-	return &empty.Empty{}, nil
+	return &emptypb.Empty{}, nil
 }
 
 func decodeToken(token string) interface{} {

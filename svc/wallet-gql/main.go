@@ -1,27 +1,26 @@
 //go:generate env GO111MODULE=on GOBIN=$PWD/bin go install lab.weave.nl/weave/generator/cmd/gen
-//go:generate env GO111MODULE=on GOBIN=$PWD/bin bin/gen lab.weave.nl/nid/nid-core/services/wallet
+//go:generate env GO111MODULE=on GOBIN=$PWD/bin bin/gen github.com/nID-sourcecode/nid-core/services/wallet
+
+// Package wallet-gql
 package main
 
 import (
-	"bytes"
-	"encoding/json"
-	"net/http"
 	"strconv"
-	"time"
+
+	"github.com/nID-sourcecode/nid-core/svc/wallet-gql/cors"
 
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/gin-gonic/gin"
 	messagebird "github.com/messagebird/go-rest-api"
 	"github.com/vrischmann/envconfig"
 
-	"lab.weave.nl/nid/nid-core/pkg/cors"
-	"lab.weave.nl/nid/nid-core/pkg/utilities/database/v2"
-	"lab.weave.nl/nid/nid-core/pkg/utilities/httpserver/v2"
-	"lab.weave.nl/nid/nid-core/pkg/utilities/log/v2"
-	postmarkUtils "lab.weave.nl/nid/nid-core/pkg/utilities/postmark/v2"
-	"lab.weave.nl/nid/nid-core/svc/wallet-gql/auth"
-	"lab.weave.nl/nid/nid-core/svc/wallet-gql/graphql"
-	"lab.weave.nl/nid/nid-core/svc/wallet-gql/models"
+	"github.com/nID-sourcecode/nid-core/pkg/httpserver"
+	"github.com/nID-sourcecode/nid-core/pkg/utilities/database/v2"
+	"github.com/nID-sourcecode/nid-core/pkg/utilities/log/v2"
+	"github.com/nID-sourcecode/nid-core/svc/wallet-gql/auth"
+	"github.com/nID-sourcecode/nid-core/svc/wallet-gql/graphql"
+	"github.com/nID-sourcecode/nid-core/svc/wallet-gql/models"
+	postmarkUtils "github.com/nID-sourcecode/nid-core/svc/wallet-gql/postmark"
 )
 
 func initialise() (graphql.Resolver, *WalletConfig) {
@@ -78,52 +77,52 @@ func main() {
 
 	// FakeDigiD() -- TODO: Depricated -- remove if app has switched to gql (mutation { createDigid(...) }
 
-	// This is probably not needed anymore since consents are saved in the db now.
-	// But it's useful for testing purposes.
-	http.HandleFunc("/history", func(w http.ResponseWriter, r *http.Request) {
-		if err := r.ParseForm(); err != nil {
-			http.Error(w, "Unable to parse HTTP body: "+err.Error(), http.StatusBadRequest)
-
-			return
-		}
-
-		since, err := time.Parse(r.PostForm["since"][0], time.RFC3339)
-		if err != nil {
-			http.Error(w, "Could not retrieve history: "+err.Error(), 500)
-
-			return
-		}
-
-		history, err := getConsentHistory(r.Context(),
-			r.PostForm["wid"][0],
-			since,
-		)
-		if err != nil {
-			http.Error(w, "Could not retrieve history: "+err.Error(), 500)
-
-			return
-		}
-
-		reqBodyBytes := new(bytes.Buffer)
-		if err := json.NewEncoder(reqBodyBytes).Encode(history); err != nil {
-			http.Error(w, "Could not encode history: "+err.Error(), 500)
-
-			return
-		}
-
-		w.WriteHeader(http.StatusOK)
-		if _, err := w.Write(reqBodyBytes.Bytes()); err != nil {
-			log.Errorf("unable to return history, error: %s", err.Error())
-		}
-	})
-
-	http.HandleFunc("/v1/health", func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusOK)
-		_, err := w.Write([]byte("ok"))
-		if err != nil {
-			log.Errorf("unable to return v1/health value, error: %s", err.Error())
-		}
-	})
+	//  This is probably not needed anymore since consents are saved in the db now.
+	//  But it's useful for testing purposes.
+	//	http.HandleFunc("/history", func(w http.ResponseWriter, r *http.Request) {
+	//		if err := r.ParseForm(); err != nil {
+	//			http.Error(w, "Unable to parse HTTP body: "+err.Error(), http.StatusBadRequest)
+	//
+	//			return
+	//		}
+	//
+	//		since, err := time.Parse(r.PostForm["since"][0], time.RFC3339)
+	//		if err != nil {
+	//			http.Error(w, "Could not retrieve history: "+err.Error(), 500)
+	//
+	//			return
+	//		}
+	//
+	//		history, err := getConsentHistory(r.Context(),
+	//			r.PostForm["wid"][0],
+	//			since,
+	//		)
+	//		if err != nil {
+	//			http.Error(w, "Could not retrieve history: "+err.Error(), 500)
+	//
+	//			return
+	//		}
+	//
+	//		reqBodyBytes := new(bytes.Buffer)
+	//		if err := json.NewEncoder(reqBodyBytes).Encode(history); err != nil {
+	//			http.Error(w, "Could not encode history: "+err.Error(), 500)
+	//
+	//			return
+	//		}
+	//
+	//		w.WriteHeader(http.StatusOK)
+	//		if _, err := w.Write(reqBodyBytes.Bytes()); err != nil {
+	//			log.Errorf("unable to return history, error: %s", err.Error())
+	//		}
+	//	})
+	//
+	//	http.HandleFunc("/v1/health", func(w http.ResponseWriter, r *http.Request) {
+	//		w.WriteHeader(http.StatusOK)
+	//		_, err := w.Write([]byte("ok"))
+	//		if err != nil {
+	//			log.Errorf("unable to return v1/health value, error: %s", err.Error())
+	//		}
+	//	})
 }
 
 // Defining the Graphql handler

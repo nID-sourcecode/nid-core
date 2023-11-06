@@ -5,7 +5,7 @@ package graphql
 import (
 	"context"
 
-	"lab.weave.nl/nid/nid-core/svc/luarunner/models"
+	"github.com/nID-sourcecode/nid-core/svc/luarunner/models"
 )
 
 func (t *CreateScript) ToModel(ctx context.Context, r *Resolver) (m models.Script, err error) {

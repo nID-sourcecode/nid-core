@@ -1,32 +1,48 @@
 authscopes:
   secure:
   - name: Claim
-    endpoint: /auth.Auth/Claim
+    endpointGrpc: /auth.Auth/Claim
+    endpointHttp: /claim
     scope: claim
   - name: Accept
-    endpoint: /auth.Auth/Accept
+    endpointGrpc: /auth.Auth/Accept
+    endpointHttp: /accept
     scope: accept
   - name: Reject
-    endpoint: /auth.Auth/Reject
+    endpointGrpc: /auth.Auth/Reject
+    endpointHttp: /reject
     scope: reject
   public:
   - name: Authorize
-    endpoint: /auth.Auth/Authorize
+    endpointHttp: /authorize
+    endpointGrpc: /auth.Auth/Authorize
   - name: AuthorizeHeadless
-    endpoint: /auth.Auth/AuthorizeHeadless
+    endpointHttp: /authorize-headless
+    endpointGrpc: /auth.Auth/AuthorizeHeadless
   - name: GenerateSessionFinaliseToken
-    endpoint: /auth.Auth/GenerateSessionFinaliseToken
+    endpointHttp: /generate-session-finalise-token
+    endpointGrpc: /auth.Auth/GenerateSessionFinaliseToken
   - name: GetSessionDetails
-    endpoint: /auth.Auth/GetSessionDetails
+    endpointHttp: /details
+    endpointGrpc: /auth.Auth/GetSessionDetails
   - name: Status
-    endpoint: /auth.Auth/Status
+    endpointHttp: /status
+    endpointGrpc: /auth.Auth/Status
   - name: Finalise
-    endpoint: /auth.Auth/Finalise
+    endpointHttp: /finalise
+    endpointGrpc: /auth.Auth/Finalise
   - name: Token
-    endpoint: /auth.Auth/Token
+    endpointHttp: /token
+    endpointGrpc: /auth.Auth/Token
+  - name: TokenClientFlow
+    endpointHttp: /token
+    endpointGrpc: /auth.Auth/TokenClientFlow
   - name: RegisterAccessModel
-    endpoint: /auth.Auth/RegisterAccessModel
+    endpointHttp: /register
+    endpointGrpc: /auth.Auth/RegisterAccessModel
   - name: GetWellKnownOpenIDConfiguration
-    endpoint: /auth.WellKnown/GetWellKnownOpenIDConfiguration
+    endpointHttp: /.well-known/oauth-authorization-server
+    endpointGrpc: /auth.WellKnown/GetWellKnownOpenIDConfiguration
   - name: GetWellKnownOAuthAuthorizationServer
-    endpoint: /auth.WellKnown/GetWellKnownOAuthAuthorizationServer
+    endpointHttp: /.well-known/openid-configuration
+    endpointGrpc: /auth.WellKnown/GetWellKnownOAuthAuthorizationServer

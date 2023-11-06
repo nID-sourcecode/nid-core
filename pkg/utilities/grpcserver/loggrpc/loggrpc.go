@@ -6,6 +6,8 @@ import (
 	"io/ioutil"
 
 	"github.com/grpc-ecosystem/go-grpc-middleware/logging/logrus/ctxlogrus"
+
+	//nolint:gomodguard //the functionality that uses this package is deprecated but we should keep it for backwards compatibility
 	"github.com/sirupsen/logrus"
 )
 

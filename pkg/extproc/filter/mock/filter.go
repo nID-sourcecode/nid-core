@@ -5,7 +5,7 @@ package mock
 import (
 	context "context"
 
-	"lab.weave.nl/nid/nid-core/pkg/extproc/filter"
+	"github.com/nID-sourcecode/nid-core/pkg/extproc/filter"
 
 	mock "github.com/stretchr/testify/mock"
 )

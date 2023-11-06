@@ -10,7 +10,7 @@ import (
 
 	"github.com/gofrs/uuid"
 	"github.com/jinzhu/gorm/dialects/postgres"
-	"lab.weave.nl/nid/nid-core/svc/wallet-gql/models"
+	"github.com/nID-sourcecode/nid-core/svc/wallet-gql/models"
 )
 
 type BooleanFilterInput struct {

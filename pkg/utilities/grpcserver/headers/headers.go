@@ -8,13 +8,13 @@ import (
 
 	"google.golang.org/grpc/metadata"
 
-	"lab.weave.nl/nid/nid-core/pkg/utilities/grpcserver/grpckeys"
+	"github.com/nID-sourcecode/nid-core/pkg/utilities/grpcserver/grpckeys"
 )
 
 // Error definitions
 var (
-	ErrUnableToDecodeHeaders error = fmt.Errorf("could not decode headers")
-	ErrHeaderNotFound        error = fmt.Errorf("header not found")
+	ErrUnableToDecodeHeaders = fmt.Errorf("could not decode headers")
+	ErrHeaderNotFound        = fmt.Errorf("header not found")
 )
 
 // MetadataHelper metadatahelper is an interface for retrieving header values from

@@ -10,11 +10,11 @@ import (
 	"github.com/xanzy/go-gitlab"
 	"google.golang.org/grpc/codes"
 
-	"lab.weave.nl/nid/nid-core/pkg/utilities/grpctesthelpers"
-	"lab.weave.nl/nid/nid-core/pkg/utilities/objectstorage"
-	mockobjectstorage "lab.weave.nl/nid/nid-core/pkg/utilities/objectstorage/mock"
-	gitmock "lab.weave.nl/nid/nid-core/svc/documentation/packages/git/mock"
-	documentationPB "lab.weave.nl/nid/nid-core/svc/documentation/proto"
+	"github.com/nID-sourcecode/nid-core/pkg/utilities/grpctesthelpers"
+	"github.com/nID-sourcecode/nid-core/pkg/utilities/objectstorage"
+	mockobjectstorage "github.com/nID-sourcecode/nid-core/pkg/utilities/objectstorage/mock"
+	gitmock "github.com/nID-sourcecode/nid-core/svc/documentation/packages/git/mock"
+	documentationPB "github.com/nID-sourcecode/nid-core/svc/documentation/proto"
 )
 
 type DocumentationServiceTestSuite struct {

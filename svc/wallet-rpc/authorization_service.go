@@ -1,21 +1,23 @@
+// Package wallet-rpc wallet implementing rpc client
 package main
 
 import (
 	"context"
 
-	"github.com/golang/protobuf/ptypes/empty"
+	"google.golang.org/protobuf/types/known/emptypb"
+
 	"github.com/lestrrat-go/jwx/jwt/openid"
 
-	"lab.weave.nl/nid/nid-core/pkg/authtoken"
-	"lab.weave.nl/nid/nid-core/pkg/utilities/errors"
-	grpcerrors "lab.weave.nl/nid/nid-core/pkg/utilities/grpcserver/errors"
-	"lab.weave.nl/nid/nid-core/pkg/utilities/grpcserver/headers"
-	"lab.weave.nl/nid/nid-core/pkg/utilities/jwt/v2"
-	"lab.weave.nl/nid/nid-core/pkg/utilities/log/v2"
-	pw "lab.weave.nl/nid/nid-core/pkg/utilities/password"
-	authscopes "lab.weave.nl/nid/nid-core/svc/auth/proto/scopes"
-	"lab.weave.nl/nid/nid-core/svc/wallet-gql/models"
-	"lab.weave.nl/nid/nid-core/svc/wallet-rpc/proto"
+	"github.com/nID-sourcecode/nid-core/pkg/authtoken"
+	pw "github.com/nID-sourcecode/nid-core/pkg/password"
+	"github.com/nID-sourcecode/nid-core/pkg/utilities/errors"
+	grpcerrors "github.com/nID-sourcecode/nid-core/pkg/utilities/grpcserver/errors"
+	"github.com/nID-sourcecode/nid-core/pkg/utilities/grpcserver/headers"
+	"github.com/nID-sourcecode/nid-core/pkg/utilities/jwt/v2"
+	"github.com/nID-sourcecode/nid-core/pkg/utilities/log/v2"
+	authscopes "github.com/nID-sourcecode/nid-core/svc/auth/transport/grpc/proto/scopes"
+	"github.com/nID-sourcecode/nid-core/svc/wallet-gql/models"
+	"github.com/nID-sourcecode/nid-core/svc/wallet-rpc/proto"
 )
 
 // AuthorizationServer handles authorization for the dashboard
@@ -41,10 +43,10 @@ const (
 )
 
 // SignIn signs in a device
-func (a *AuthorizationServer) SignIn(ctx context.Context, in *empty.Empty) (*proto.SignInResponse, error) {
+func (a *AuthorizationServer) SignIn(ctx context.Context, _ *emptypb.Empty) (*proto.SignInResponse, error) {
 	code, secret, err := a.metadataHelper.GetBasicAuth(ctx)
 	if err != nil {
-		return nil, grpcerrors.ErrInvalidArgument(errors.Wrap(err, "retrieving basic auth"))
+		return nil, grpcerrors.ErrInvalidArgument(errors.Wrap(err, "retrieving basic auth").Error())
 	}
 
 	device, err := a.db.DeviceDB.GetByCode(code, true)
@@ -85,10 +87,10 @@ func (a *AuthorizationServer) SignIn(ctx context.Context, in *empty.Empty) (*pro
 }
 
 // RegisterDevice registers a device and generates a code and secret for it
-func (a *AuthorizationServer) RegisterDevice(ctx context.Context, in *empty.Empty) (*proto.RegisterDeviceResponse, error) {
+func (a *AuthorizationServer) RegisterDevice(ctx context.Context, _ *emptypb.Empty) (*proto.RegisterDeviceResponse, error) {
 	bsn, password, err := a.metadataHelper.GetBasicAuth(ctx)
 	if err != nil {
-		return nil, grpcerrors.ErrInvalidArgument(errors.Wrap(err, "retrieving basic auth"))
+		return nil, grpcerrors.ErrInvalidArgument(errors.Wrap(err, "retrieving basic auth").Error())
 	}
 
 	user, err := a.db.UserDB.GetByBsn(bsn)

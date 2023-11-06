@@ -1,3 +1,4 @@
+// Package autopseudo
 package main
 
 import (
@@ -6,12 +7,12 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/lestrrat-go/jwx/jwk"
+	"github.com/lestrrat-go/jwx/v2/jwk"
 	"github.com/vrischmann/envconfig"
 
-	"lab.weave.nl/nid/nid-core/pkg/utilities/httpserver"
-	"lab.weave.nl/nid/nid-core/pkg/utilities/log/v2"
-	"lab.weave.nl/nid/nid-core/svc/autopseudo/keyutil"
+	"github.com/nID-sourcecode/nid-core/pkg/httpserver"
+	"github.com/nID-sourcecode/nid-core/pkg/keyutil"
+	"github.com/nID-sourcecode/nid-core/pkg/utilities/log/v2"
 )
 
 type accessClaims struct {
@@ -56,7 +57,7 @@ func main() {
 	log.Fatal(router.Run(fmt.Sprintf(":%d", conf.Port)))
 }
 
-func initRouter(jwkSet *jwk.Set, key *rsa.PrivateKey, conf *AutoPseudoConfig) *gin.Engine {
+func initRouter(jwkSet jwk.Set, key *rsa.PrivateKey, conf *AutoPseudoConfig) *gin.Engine {
 	server := NewAutoPseudoServer(key, conf)
 	router := httpserver.NewGinServer()
 	router.GET("/jwks", func(c *gin.Context) {

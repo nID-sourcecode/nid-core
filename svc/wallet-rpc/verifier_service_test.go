@@ -1,21 +1,22 @@
 package main
 
 import (
-	"fmt"
 	"testing"
 	"time"
+
+	"github.com/nID-sourcecode/nid-core/pkg/utilities/log/v2"
 
 	"github.com/gofrs/uuid"
 	"github.com/jinzhu/gorm"
 	suite "github.com/stretchr/testify/suite"
 
-	"lab.weave.nl/nid/nid-core/pkg/utilities/database/v2"
-	"lab.weave.nl/nid/nid-core/pkg/utilities/errors"
-	"lab.weave.nl/nid/nid-core/pkg/utilities/grpctesthelpers"
-	"lab.weave.nl/nid/nid-core/svc/wallet-gql/messagebird"
-	"lab.weave.nl/nid/nid-core/svc/wallet-gql/models"
-	"lab.weave.nl/nid/nid-core/svc/wallet-gql/postmark"
-	"lab.weave.nl/nid/nid-core/svc/wallet-rpc/proto"
+	"github.com/nID-sourcecode/nid-core/pkg/utilities/database/v2"
+	"github.com/nID-sourcecode/nid-core/pkg/utilities/errors"
+	"github.com/nID-sourcecode/nid-core/pkg/utilities/grpctesthelpers"
+	"github.com/nID-sourcecode/nid-core/svc/wallet-gql/messagebird"
+	"github.com/nID-sourcecode/nid-core/svc/wallet-gql/models"
+	"github.com/nID-sourcecode/nid-core/svc/wallet-gql/postmark"
+	"github.com/nID-sourcecode/nid-core/svc/wallet-rpc/proto"
 )
 
 type EmailVerifierServiceTestSuite struct {
@@ -415,7 +416,7 @@ func (s *EmailVerifierServiceTestSuite) TearDownTest() {
 
 func (s *EmailVerifierServiceTestSuite) TearDownSuite() {
 	s.NoError(s.db.Close())
-	fmt.Println("Closing db connection")
+	log.Info("Closing db connection")
 }
 
 func TestEmailVerifierServiceTestSuite(t *testing.T) {

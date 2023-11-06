@@ -8,8 +8,8 @@ import (
 	"github.com/messagebird/go-rest-api/lookup"
 	"github.com/messagebird/go-rest-api/verify"
 
-	"lab.weave.nl/nid/nid-core/pkg/utilities/errors"
-	"lab.weave.nl/nid/nid-core/svc/wallet-gql/variables"
+	"github.com/nID-sourcecode/nid-core/pkg/utilities/errors"
+	"github.com/nID-sourcecode/nid-core/svc/wallet-gql/variables"
 )
 
 // PhoneVerifier is a definition for a service that can create and validate phone verification requests

@@ -5,7 +5,7 @@ import (
 	"bytes"
 
 	envoy_core_v3 "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
-	ext_proc_pb "github.com/envoyproxy/go-control-plane/envoy/service/ext_proc/v3alpha"
+	ext_proc_pb "github.com/envoyproxy/go-control-plane/envoy/service/ext_proc/v3"
 )
 
 // Calculator calculates header and body mutations from the differences between new and original.

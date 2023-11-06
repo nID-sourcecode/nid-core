@@ -7,11 +7,11 @@ import (
 
 	"github.com/jinzhu/gorm"
 
-	"lab.weave.nl/nid/nid-core/pkg/utilities/errors"
-	"lab.weave.nl/nid/nid-core/pkg/utilities/log/v2"
-	postmarkUtils "lab.weave.nl/nid/nid-core/pkg/utilities/postmark/v2"
-	"lab.weave.nl/nid/nid-core/svc/wallet-gql/models"
-	"lab.weave.nl/nid/nid-core/svc/wallet-gql/postmark"
+	"github.com/nID-sourcecode/nid-core/pkg/utilities/errors"
+	"github.com/nID-sourcecode/nid-core/pkg/utilities/log/v2"
+	"github.com/nID-sourcecode/nid-core/svc/wallet-gql/models"
+	"github.com/nID-sourcecode/nid-core/svc/wallet-gql/postmark"
+	postmarkUtils "github.com/nID-sourcecode/nid-core/svc/wallet-gql/postmark"
 )
 
 // PostmarkClient is a postmark email client
@@ -20,7 +20,7 @@ import (
 var PostmarkClient postmarkUtils.EmailClient
 
 // BeforeCreateHook hook called before creating an email address
-func (h *CustomEmailAddressHooks) BeforeCreateHook(ctx context.Context, tx *gorm.DB, input *CreateEmailAddress) error {
+func (h *CustomEmailAddressHooks) BeforeCreateHook(_ context.Context, tx *gorm.DB, input *CreateEmailAddress) error {
 	// check for email validity
 	_, err := mail.ParseAddress(input.EmailAddress)
 	if err != nil {
@@ -42,7 +42,7 @@ func (h *CustomEmailAddressHooks) BeforeCreateHook(ctx context.Context, tx *gorm
 }
 
 // AfterCreateHook hook called after creating an email address
-func (h *CustomEmailAddressHooks) AfterCreateHook(ctx context.Context, tx *gorm.DB, model *models.EmailAddress) error {
+func (h *CustomEmailAddressHooks) AfterCreateHook(_ context.Context, tx *gorm.DB, model *models.EmailAddress) error {
 	// Send verification email
 	postmark := &postmark.Postmark{Client: PostmarkClient}
 	token, err := postmark.NewEmailVerification(model.EmailAddress)

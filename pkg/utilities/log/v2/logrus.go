@@ -6,12 +6,13 @@ import (
 	"io"
 	"io/ioutil"
 
+	"github.com/sirupsen/logrus" //nolint:gomodguard
+
 	logrustash "github.com/bshuster-repo/logrus-logstash-hook"
 	"github.com/grpc-ecosystem/go-grpc-middleware/logging/logrus/ctxlogrus"
 	joonix "github.com/joonix/log"
-	"github.com/sirupsen/logrus"
 
-	"lab.weave.nl/nid/nid-core/pkg/utilities/errors"
+	"github.com/nID-sourcecode/nid-core/pkg/utilities/errors"
 )
 
 type logrusLoggerUtility struct {

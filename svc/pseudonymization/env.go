@@ -3,7 +3,7 @@ package main
 import (
 	"time"
 
-	"lab.weave.nl/nid/nid-core/pkg/environment"
+	"github.com/nID-sourcecode/nid-core/pkg/environment"
 )
 
 // PseudonymizationConfig contains the config for the pseudonymization server

@@ -4,20 +4,19 @@ package postmark
 import (
 	"fmt"
 
+	postmarkUtils "github.com/nID-sourcecode/nid-core/svc/wallet-rpc/postmark"
+
 	"github.com/gofrs/uuid"
 	"github.com/keighl/postmark"
 
-	"lab.weave.nl/nid/nid-core/pkg/utilities/errors"
-	"lab.weave.nl/nid/nid-core/pkg/utilities/password"
-	postmarkUtils "lab.weave.nl/nid/nid-core/pkg/utilities/postmark/v2"
+	"github.com/nID-sourcecode/nid-core/pkg/password"
+	"github.com/nID-sourcecode/nid-core/pkg/utilities/errors"
 )
 
 const verificationEmailTemplateID = 19258979
 
-// Token did not match error
-var (
-	ErrTokenDidNotMatch error = fmt.Errorf("token did not match")
-)
+// ErrTokenDidNotMatch token did not match error
+var ErrTokenDidNotMatch = fmt.Errorf("token did not match")
 
 // EmailVerifier is a definition for a service that can create and validate email verification requests
 type EmailVerifier interface {
@@ -73,4 +72,28 @@ func (p *Postmark) CheckEmailVerification(token string, code string) error {
 	}
 
 	return nil
+}
+
+// EmailClient interface for postmark client
+type EmailClient interface {
+	SendTemplatedEmail(postmark.TemplatedEmail) (postmark.EmailResponse, error)
+}
+
+// DefaultClient holds postmark client information in it
+type DefaultClient struct {
+	client *postmark.Client
+}
+
+// SendTemplatedEmail via postmark client
+// Returns the messageID for the email as tracked in postmark, on error, the messageID is also returned.
+// When the messageID is set, there was an error on postmark's side
+// nolint: gocritic
+func (c *DefaultClient) SendTemplatedEmail(mail postmark.TemplatedEmail) (postmark.EmailResponse, error) {
+	return c.client.SendTemplatedEmail(mail)
+}
+
+// NewClient returns client for postmark
+func NewClient(apiToken, accountToken string) EmailClient {
+	client := postmark.NewClient(apiToken, accountToken)
+	return &DefaultClient{client: client}
 }

@@ -9,19 +9,22 @@ import (
 	"fmt"
 	"testing"
 
+	authv3 "github.com/envoyproxy/go-control-plane/envoy/service/auth/v3"
+
+	"github.com/nID-sourcecode/nid-core/svc/nid-filter/contract"
+
 	"github.com/stretchr/testify/suite"
 
-	"lab.weave.nl/nid/nid-core/pkg/extproc/filter"
-	"lab.weave.nl/nid/nid-core/svc/wallet-rpc/proto"
-	wallet_mock "lab.weave.nl/nid/nid-core/svc/wallet-rpc/proto/mock"
+	"github.com/nID-sourcecode/nid-core/svc/wallet-rpc/proto"
+	walletMock "github.com/nID-sourcecode/nid-core/svc/wallet-rpc/proto/mock"
 )
 
 type AutoBSNTestSuite struct {
 	suite.Suite
 	key              *rsa.PrivateKey
 	authHeader       string
-	filter           *Filter
-	walletClientMock *wallet_mock.WalletClient
+	filter           contract.AuthorizationRule
+	walletClientMock *walletMock.WalletClient
 }
 
 func (s *AutoBSNTestSuite) SetupSuite() {
@@ -40,11 +43,11 @@ func (s *AutoBSNTestSuite) SetupSuite() {
 	}
 	claimsJSON, err := json.Marshal(claims)
 	s.Require().NoError(err)
-	s.authHeader = fmt.Sprintf(jwtFormat, base64.StdEncoding.EncodeToString(claimsJSON))
+	s.authHeader = fmt.Sprintf(jwtFormat, base64.RawURLEncoding.EncodeToString(claimsJSON))
 }
 
 func (s *AutoBSNTestSuite) SetupTest() {
-	s.walletClientMock = &wallet_mock.WalletClient{}
+	s.walletClientMock = &walletMock.WalletClient{}
 	s.filter = &Filter{
 		config: &Config{
 			Namespace:         "nid",
@@ -59,24 +62,19 @@ func (s *AutoBSNTestSuite) SetupTest() {
 func (s *AutoBSNTestSuite) TestHeaders() {
 	ctx := context.TODO()
 	s.walletClientMock.On("GetBSNForPseudonym", ctx, &proto.GetBSNForPseudonymRequest{Pseudonym: "QUJDREVGRw=="}).Return(&proto.GetBSNForPseudonymResponse{Bsn: "123456789"}, nil)
-
-	res, err := s.filter.OnHTTPRequest(context.TODO(), nil, map[string]string{
+	headers := map[string]string{
 		"authorization": s.authHeader,
 		":path":         "/something?apple=something+containing+%24%24nid%3Absn%24%24+and+%24%24nid%3Asoobjact%24%24&pie=made+of+pears",
-	})
+	}
+	err := s.filter.Check(context.TODO(), returnAuthV3CheckRequest("", headers))
 
 	s.Require().NoError(err)
-	s.Require().NotNil(res)
 
-	expectedResponse := &filter.ProcessingResponse{
-		NewHeaders: map[string]string{
-			"authorization": s.authHeader,
-			":path":         "/something?apple=something+containing+123456789+and+%24%24nid%3Asoobjact%24%24&pie=made+of+pears",
-		},
-		NewBody:           nil,
-		ImmediateResponse: nil,
+	NewHeaders := map[string]string{
+		"authorization": s.authHeader,
+		":path":         "/something?apple=something+containing+123456789+and+%24%24nid%3Asoobjact%24%24&pie=made+of+pears",
 	}
-	s.Require().EqualValues(expectedResponse, res)
+	s.Require().EqualValues(NewHeaders, headers)
 }
 
 func (s *AutoBSNTestSuite) TestBody() {
@@ -88,46 +86,63 @@ func (s *AutoBSNTestSuite) TestBody() {
 		":path":         "/something",
 	}
 
-	res, err := s.filter.OnHTTPRequest(context.TODO(), []byte("Some random nonsense containing $$nid:bsn$$ indeed very !n$t4$$$$eresting"), headers)
+	authRequest := returnAuthV3CheckRequest("Some random nonsense containing $$nid:bsn$$ indeed very !n$t4$$$$eresting", headers)
+	err := s.filter.Check(context.TODO(), authRequest)
 
 	s.Require().NoError(err)
-	expectedResponse := &filter.ProcessingResponse{
-		NewHeaders: map[string]string{
-			"authorization":  s.authHeader,
-			"content-length": "71",
-			":path":          "/something",
-		},
-		NewBody:           []byte("Some random nonsense containing 123456789 indeed very !n$t4$$$$eresting"),
-		ImmediateResponse: nil,
+	newHeaders := map[string]string{
+		"authorization":  s.authHeader,
+		"content-length": "71",
+		":path":          "/something",
 	}
+	newBody := "Some random nonsense containing 123456789 indeed very !n$t4$$$$eresting"
+	currentBody := authRequest.GetAttributes().GetRequest().GetHttp().GetBody()
+	currentHeaders := authRequest.GetAttributes().GetRequest().GetHttp().GetHeaders()
 
-	s.Equal(expectedResponse, res)
+	s.Equal(newHeaders, currentHeaders)
+	s.Equal(newBody, currentBody)
 }
 
 func (s *AutoBSNTestSuite) TestHeadersAndBody() {
 	ctx := context.TODO()
 	s.walletClientMock.On("GetBSNForPseudonym", ctx, &proto.GetBSNForPseudonymRequest{Pseudonym: "QUJDREVGRw=="}).Return(&proto.GetBSNForPseudonymResponse{Bsn: "123456789"}, nil)
 
-	res, err := s.filter.OnHTTPRequest(context.TODO(), []byte("Some random nonsense containing $$nid:bsn$$ indeed very !n$t4$$$$eresting"), map[string]string{
+	authRequest := returnAuthV3CheckRequest("Some random nonsense containing $$nid:bsn$$ indeed very !n$t4$$$$eresting", map[string]string{
 		"authorization": s.authHeader,
 		":path":         "/something?apple=something+containing+%24%24nid%3Absn%24%24+and+%24%24nid%3Asoobjact%24%24&pie=made+of+pears",
 	})
 
-	s.Require().NoError(err)
-	s.Require().NotNil(res)
+	err := s.filter.Check(context.TODO(), authRequest)
 
-	expectedResponse := &filter.ProcessingResponse{
-		NewHeaders: map[string]string{
-			"authorization":  s.authHeader,
-			"content-length": "71",
-			":path":          "/something?apple=something+containing+123456789+and+%24%24nid%3Asoobjact%24%24&pie=made+of+pears",
-		},
-		NewBody:           []byte("Some random nonsense containing 123456789 indeed very !n$t4$$$$eresting"),
-		ImmediateResponse: nil,
+	s.Require().NoError(err)
+
+	newHeaders := map[string]string{
+		"authorization":  s.authHeader,
+		"content-length": "71",
+		":path":          "/something?apple=something+containing+123456789+and+%24%24nid%3Asoobjact%24%24&pie=made+of+pears",
 	}
-	s.Require().EqualValues(expectedResponse, res)
+	newBody := []byte("Some random nonsense containing 123456789 indeed very !n$t4$$$$eresting")
+
+	currentHeaders := authRequest.GetAttributes().GetRequest().GetHttp().GetHeaders()
+	currentBody := authRequest.GetAttributes().GetRequest().GetHttp().GetBody()
+
+	s.Require().EqualValues(newHeaders, currentHeaders)
+	s.Require().EqualValues(newBody, currentBody)
 }
 
 func TestAutoBSNTestSuite(t *testing.T) {
 	suite.Run(t, &AutoBSNTestSuite{})
+}
+
+func returnAuthV3CheckRequest(body string, headers map[string]string) *authv3.CheckRequest {
+	return &authv3.CheckRequest{
+		Attributes: &authv3.AttributeContext{
+			Request: &authv3.AttributeContext_Request{
+				Http: &authv3.AttributeContext_HttpRequest{
+					Headers: headers,
+					Body:    body,
+				},
+			},
+		},
+	}
 }

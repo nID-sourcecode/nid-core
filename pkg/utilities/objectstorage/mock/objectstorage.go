@@ -8,7 +8,7 @@ import (
 
 	"github.com/stretchr/testify/mock"
 
-	"lab.weave.nl/nid/nid-core/pkg/utilities/objectstorage"
+	"github.com/nID-sourcecode/nid-core/pkg/utilities/objectstorage"
 )
 
 // Client that mocks a writer

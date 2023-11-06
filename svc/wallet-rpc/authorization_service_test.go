@@ -1,26 +1,27 @@
 package main
 
 import (
-	"fmt"
+	"errors"
 	"testing"
 
+	"google.golang.org/protobuf/types/known/emptypb"
+
 	"github.com/gofrs/uuid"
-	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/jinzhu/gorm"
 	"github.com/stretchr/testify/mock"
-	suite "github.com/stretchr/testify/suite"
+	"github.com/stretchr/testify/suite"
 	"google.golang.org/grpc/codes"
 
-	"lab.weave.nl/nid/nid-core/pkg/utilities/database/v2"
-	"lab.weave.nl/nid/nid-core/pkg/utilities/grpcserver/headers"
-	headersmock "lab.weave.nl/nid/nid-core/pkg/utilities/grpcserver/headers/mock"
-	"lab.weave.nl/nid/nid-core/pkg/utilities/grpctesthelpers"
-	"lab.weave.nl/nid/nid-core/pkg/utilities/jwt/v2"
-	pw "lab.weave.nl/nid/nid-core/pkg/utilities/password"
-	"lab.weave.nl/nid/nid-core/svc/wallet-gql/models"
+	pw "github.com/nID-sourcecode/nid-core/pkg/password"
+	"github.com/nID-sourcecode/nid-core/pkg/utilities/database/v2"
+	"github.com/nID-sourcecode/nid-core/pkg/utilities/grpcserver/headers"
+	headersmock "github.com/nID-sourcecode/nid-core/pkg/utilities/grpcserver/headers/mock"
+	"github.com/nID-sourcecode/nid-core/pkg/utilities/grpctesthelpers"
+	"github.com/nID-sourcecode/nid-core/pkg/utilities/jwt/v2"
+	"github.com/nID-sourcecode/nid-core/svc/wallet-gql/models"
 )
 
-var ErrAllesIsLek error = fmt.Errorf("alles is lek")
+var errAllesIsLek = errors.New("alles is lek")
 
 type WalletAuthorizationServiceTestSuite struct {
 	grpctesthelpers.GrpcTestSuite
@@ -73,7 +74,7 @@ func (s *WalletAuthorizationServiceTestSuite) TearDownSuite() {
 func (s *WalletAuthorizationServiceTestSuite) TestRegisterApp() {
 	user := s.createDummyUser()
 	s.mockedMetadataHelper.On("GetBasicAuth", s.Ctx).Return("123456789", "darthvader123#", nil)
-	res, err := s.authServer.RegisterDevice(s.Ctx, &empty.Empty{})
+	res, err := s.authServer.RegisterDevice(s.Ctx, &emptypb.Empty{})
 	s.Require().NoError(err)
 
 	device := &models.Device{}
@@ -120,7 +121,7 @@ func (s *WalletAuthorizationServiceTestSuite) TestCantRegisterApp() {
 			Name: "No basic auth",
 			MetaHelper: func() headers.MetadataHelper {
 				mockedMetadataHelper := &headersmock.GRPCMetadataHelperMock{}
-				mockedMetadataHelper.On("GetBasicAuth", mock.Anything).Return("", "", ErrAllesIsLek)
+				mockedMetadataHelper.On("GetBasicAuth", mock.Anything).Return("", "", errAllesIsLek)
 
 				return mockedMetadataHelper
 			},
@@ -132,7 +133,7 @@ func (s *WalletAuthorizationServiceTestSuite) TestCantRegisterApp() {
 	for _, test := range tests {
 		s.Run(test.Name, func() {
 			s.authServer.metadataHelper = test.MetaHelper()
-			_, err := s.authServer.RegisterDevice(s.Ctx, &empty.Empty{})
+			_, err := s.authServer.RegisterDevice(s.Ctx, &emptypb.Empty{})
 			s.Require().Error(err)
 			s.VerifyStatusError(err, test.ExpectedErrCode)
 			s.Contains(err.Error(), test.ExpectedErrMessage)
@@ -146,12 +147,11 @@ func (s *WalletAuthorizationServiceTestSuite) TestSignInSuccess() {
 	user := s.createDummyUser()
 	s.createDummyDevice(user.ID, "device1", "alsdkfj#@4!")
 
-	res, err := s.authServer.SignIn(s.Ctx, &empty.Empty{})
+	res, err := s.authServer.SignIn(s.Ctx, &emptypb.Empty{})
 	s.Require().NoError(err)
 
 	claims, err := s.authServer.jwtClient.GetClaims(res.Bearer)
 	s.Require().NoError(err)
-	s.Require().NoError(claims.Valid())
 
 	issuerClaim, ok := claims["iss"]
 	s.Require().True(ok, "no issuer in token")
@@ -204,7 +204,7 @@ func (s *WalletAuthorizationServiceTestSuite) TestCantSignin() {
 			Name: "No basic auth",
 			MetaHelper: func() headers.MetadataHelper {
 				mockedMetadataHelper := &headersmock.GRPCMetadataHelperMock{}
-				mockedMetadataHelper.On("GetBasicAuth", mock.Anything).Return("", "", ErrAllesIsLek)
+				mockedMetadataHelper.On("GetBasicAuth", mock.Anything).Return("", "", errAllesIsLek)
 
 				return mockedMetadataHelper
 			},
@@ -216,7 +216,7 @@ func (s *WalletAuthorizationServiceTestSuite) TestCantSignin() {
 	for _, test := range tests {
 		s.Run(test.Name, func() {
 			s.authServer.metadataHelper = test.MetaHelper()
-			_, err := s.authServer.SignIn(s.Ctx, &empty.Empty{})
+			_, err := s.authServer.SignIn(s.Ctx, &emptypb.Empty{})
 			s.Require().Error(err)
 			s.VerifyStatusError(err, test.ExpectedErrCode)
 			s.Contains(err.Error(), test.ExpectedErrMessage)

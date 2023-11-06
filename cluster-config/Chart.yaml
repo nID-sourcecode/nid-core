@@ -24,61 +24,23 @@ appVersion: 1.16.0
 
 
 dependencies:
-  - name: http-proxy
-    version: 0.0.3
-    repository: gs://weave-helm-chart-repository
-    alias: testproxy
-    condition: testing
-  - name: http-proxy
-    version: 0.0.3
-    repository: gs://weave-helm-chart-repository
-    alias: testproxy-testing
-    condition: testing
   - name: postgresql
-    version: 9.3.3
+    version: 12.10.0
     repository: https://charts.bitnami.com/bitnami
     alias: postgres
   # If we want to use custom charts we can just put them in this repo and use `file://`
   - name: external-dns
-    version: 3.3.0
+    version: 6.14.3
     repository: https://charts.bitnami.com/bitnami
     condition: external-dns.enabled
-  - name: prometheus
-    version: 11.15.0
-    repository: https://prometheus-community.github.io/helm-charts
-    condition: prometheus.enabled
-  - name: grafana
-    version: 5.6.7
-    repository:  https://grafana.github.io/helm-charts
-    condition: grafana.enabled
-  - name: kiali-server
-    repository: https://kiali.org/helm-charts
-    condition: kiali-server.enabled
-    version: 1.24.0
-  - name: elasticsearch
-    condition: elk.enabled
-    repository: https://helm.elastic.co
-    version: 7.10.0
-  - name: kibana
-    version: 7.9.2
-    repository: https://helm.elastic.co
-    condition: elk.enabled
-  - name: logstash
-    version: 7.9.2
-    repository: https://helm.elastic.co
-    condition: elk.enabled
   - name: jwks
     repository: '@weavejwks'
     version: 1.0.0
   - name: redis
-    version: 12.8.0
+    version: 17.8.4
     repository: https://charts.bitnami.com/bitnami
     condition: redis.enabled
-  - name: minio
-    version: 6.5.0
+  - name: nginx
+    version: 13.2.29
     repository: https://charts.bitnami.com/bitnami
-    condition: minio.enabled
-  - name: filebeat
-    version: 7.13.2
-    repository: https://helm.elastic.co
-    condition: filebeat.enabled
+    condition: nginx.enabled

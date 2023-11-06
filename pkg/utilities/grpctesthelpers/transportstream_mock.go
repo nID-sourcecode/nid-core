@@ -10,7 +10,7 @@ import (
 
 // Error definitions
 var (
-	ErrFailHeader error = fmt.Errorf("failing header")
+	errFailHeader = fmt.Errorf("failing header")
 )
 
 // ServerTransportStreamMock is a mock for the grpc.ServerTransportStreamMock interface
@@ -30,7 +30,7 @@ func (m *ServerTransportStreamMock) Method() string {
 func (m *ServerTransportStreamMock) SetHeader(md metadata.MD) error {
 	for k, v := range md {
 		if m.isFailingHeader(k) {
-			return ErrFailHeader
+			return errFailHeader
 		}
 		m.Headers[k] = v
 	}

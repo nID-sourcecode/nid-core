@@ -11,7 +11,7 @@ import (
 	"github.com/jinzhu/gorm"
 	"github.com/vektah/gqlparser/v2/ast"
 
-	"lab.weave.nl/nid/nid-core/svc/wallet-gql/models"
+	"github.com/nID-sourcecode/nid-core/svc/wallet-gql/models"
 	generr "lab.weave.nl/weave/generator/pkg/errors"
 )
 
@@ -29,13 +29,13 @@ func NewCustomIstioAuthMiddleware(db *gorm.DB) func(http.Handler) http.Handler {
 			ctx := r.Context()
 			claimsJSON, err := base64.RawURLEncoding.DecodeString(jwtBase64Claims)
 			if err != nil {
-				sendGraphQLError(ctx, w, path, fmt.Errorf("%v: can't parse claims from base 64: %w", ErrUnauthorized, err))
+				sendGraphQLError(ctx, w, path, fmt.Errorf("%s: can't parse claims from base 64: %w", ErrUnauthorized, err)) // nolint:errorlint
 				return
 			}
 
 			err = json.Unmarshal(claimsJSON, &claims)
 			if err != nil {
-				sendGraphQLError(ctx, w, path, fmt.Errorf("%v: can't unmarshal claims: %w", ErrUnauthorized, err))
+				sendGraphQLError(ctx, w, path, fmt.Errorf("%s: can't unmarshal claims: %w", ErrUnauthorized, err)) // nolint:errorlint
 				return
 			}
 

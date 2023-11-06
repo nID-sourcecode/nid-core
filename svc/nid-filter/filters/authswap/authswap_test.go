@@ -7,9 +7,9 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	"lab.weave.nl/nid/nid-core/pkg/extproc/filter"
-	authpb "lab.weave.nl/nid/nid-core/svc/auth/proto"
-	"lab.weave.nl/nid/nid-core/svc/auth/proto/mock"
+	"github.com/nID-sourcecode/nid-core/pkg/extproc/filter"
+	authpb "github.com/nID-sourcecode/nid-core/svc/auth/transport/grpc/proto"
+	"github.com/nID-sourcecode/nid-core/svc/auth/transport/grpc/proto/mock"
 )
 
 type AuthSwapFilterTestSuite struct {

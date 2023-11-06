@@ -5,16 +5,16 @@ import (
 	"context"
 	"strings"
 
-	ext_proc_filter "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/http/ext_proc/v3alpha"
-	ext_proc_pb "github.com/envoyproxy/go-control-plane/envoy/service/ext_proc/v3alpha"
+	ext_proc_filter "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/http/ext_proc/v3"
+	ext_proc_pb "github.com/envoyproxy/go-control-plane/envoy/service/ext_proc/v3"
 	"google.golang.org/grpc/metadata"
 
-	"lab.weave.nl/nid/nid-core/pkg/extproc/filter"
-	"lab.weave.nl/nid/nid-core/pkg/extproc/filterchain"
-	"lab.weave.nl/nid/nid-core/pkg/extproc/mutation"
-	"lab.weave.nl/nid/nid-core/pkg/utilities/errors"
-	grpcerrors "lab.weave.nl/nid/nid-core/pkg/utilities/grpcserver/errors"
-	"lab.weave.nl/nid/nid-core/pkg/utilities/log/v2"
+	"github.com/nID-sourcecode/nid-core/pkg/extproc/filter"
+	"github.com/nID-sourcecode/nid-core/pkg/extproc/filterchain"
+	"github.com/nID-sourcecode/nid-core/pkg/extproc/mutation"
+	"github.com/nID-sourcecode/nid-core/pkg/utilities/errors"
+	grpcerrors "github.com/nID-sourcecode/nid-core/pkg/utilities/grpcserver/errors"
+	"github.com/nID-sourcecode/nid-core/pkg/utilities/log/v2"
 )
 
 // RequestContext represents the context of a single http request. It handles the various messages that can be send to an ext_proc stream.
@@ -48,7 +48,6 @@ func (d *FilterChainRequestContext) OnRequestHeaders(ctx context.Context, req *e
 
 	skipBody := requestHeaders[":method"] == "GET"
 
-	log.Infof("headers: %+v", req.RequestHeaders.Headers)
 	headerProcessingResponse, err := d.filterchain.ProcessRequestHeaders(ctx, requestHeaders, skipBody)
 	if err != nil {
 		return nil, errors.Wrap(err, "processing request headers in filter chain")
@@ -108,7 +107,7 @@ func (d *FilterChainRequestContext) OnRequestBody(ctx context.Context, req *ext_
 }
 
 // OnResponseHeaders processes the response headers
-func (d *FilterChainRequestContext) OnResponseHeaders(ctx context.Context, req *ext_proc_pb.ProcessingRequest_ResponseHeaders) (*ext_proc_pb.ProcessingResponse, error) {
+func (d *FilterChainRequestContext) OnResponseHeaders(_ context.Context, req *ext_proc_pb.ProcessingRequest_ResponseHeaders) (*ext_proc_pb.ProcessingResponse, error) {
 	responseHeaders := convertHTTPHeadersToStringMap(req.ResponseHeaders)
 	d.originalResponseHeaders = make(map[string]string)
 	for k, v := range responseHeaders {

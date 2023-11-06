@@ -4,11 +4,11 @@ import (
 	"github.com/jinzhu/gorm"
 	"gopkg.in/gormigrate.v1"
 
-	"lab.weave.nl/nid/nid-core/pkg/utilities/database/v2"
-	"lab.weave.nl/nid/nid-core/pkg/utilities/errors"
-	"lab.weave.nl/nid/nid-core/pkg/utilities/log/v2"
-	"lab.weave.nl/nid/nid-core/pkg/utilities/password"
-	"lab.weave.nl/nid/nid-core/svc/auth/models"
+	"github.com/nID-sourcecode/nid-core/pkg/password"
+	"github.com/nID-sourcecode/nid-core/pkg/utilities/database/v2"
+	"github.com/nID-sourcecode/nid-core/pkg/utilities/errors"
+	"github.com/nID-sourcecode/nid-core/pkg/utilities/log/v2"
+	"github.com/nID-sourcecode/nid-core/svc/auth/models"
 )
 
 // DashboardDB database struct used by dashboard grpc services

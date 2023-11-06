@@ -10,16 +10,13 @@ import (
 
 	"github.com/miscreant/miscreant.go"
 
-	"lab.weave.nl/nid/nid-core/pkg/utilities/errors"
-	"lab.weave.nl/nid/nid-core/pkg/utilities/log/v2"
+	"github.com/nID-sourcecode/nid-core/pkg/utilities/errors"
+	"github.com/nID-sourcecode/nid-core/pkg/utilities/log/v2"
 )
 
 const keyLength int = 32
 
-// Error definitions
-var (
-	ErrIncorrectDataLength error = fmt.Errorf("incorrect data length")
-)
+var errIncorrectDataLength = fmt.Errorf("incorrect data length")
 
 func write(path string, data []byte) error {
 	dirname := filepath.Dir(path)
@@ -48,7 +45,7 @@ func read(path string, length int, generate func() ([]byte, error)) ([]byte, err
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to read key from path")
 	} else if len(data) != length {
-		return nil, errors.Wrap(ErrIncorrectDataLength, "unexpected key length")
+		return nil, errors.Wrap(errIncorrectDataLength, "unexpected key length")
 	}
 
 	return data, nil

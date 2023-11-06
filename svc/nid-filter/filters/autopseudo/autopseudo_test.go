@@ -10,8 +10,6 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/suite"
-
-	"lab.weave.nl/nid/nid-core/pkg/extproc/filter"
 )
 
 const jwtFormat = "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.%s.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
@@ -39,7 +37,7 @@ func (s *AutopseudoTestSuite) SetupSuite() {
 	}
 	claimsJSON, err := json.Marshal(claims)
 	s.Require().NoError(err)
-	s.authHeader = fmt.Sprintf(jwtFormat, base64.StdEncoding.EncodeToString(claimsJSON))
+	s.authHeader = fmt.Sprintf(jwtFormat, base64.RawURLEncoding.EncodeToString(claimsJSON))
 }
 
 func (s *AutopseudoTestSuite) SetupTest() {
@@ -54,86 +52,93 @@ func (s *AutopseudoTestSuite) SetupTest() {
 }
 
 func (s *AutopseudoTestSuite) TestHeaders() {
-	res, err := s.filter.OnHTTPRequest(context.TODO(), nil, map[string]string{
+	authRequest := returnAuthV3CheckRequest("", map[string]string{
 		"authorization": s.authHeader,
 		":path":         "/something?apple=something+containing+%24%24nid%3Asubject%24%24+and+%24%24nid%3Asoobjact%24%24&pie=made+of+pears",
 	})
+	err := s.filter.Check(context.TODO(), authRequest)
 
 	s.Require().NoError(err)
-	s.Require().NotNil(res)
 
-	expectedResponse := &filter.ProcessingResponse{
-		NewHeaders: map[string]string{
-			"authorization": s.authHeader,
-			":path":         "/something?apple=something+containing+QUJDREVGRw%3D%3D+and+%24%24nid%3Asoobjact%24%24&pie=made+of+pears",
-		},
-		NewBody:           nil,
-		ImmediateResponse: nil,
+	newHeader := map[string]string{
+		"authorization": s.authHeader,
+		":path":         "/something?apple=something+containing+QUJDREVGRw%3D%3D+and+%24%24nid%3Asoobjact%24%24&pie=made+of+pears",
 	}
-	s.Require().EqualValues(expectedResponse, res)
+
+	currentHeaders := authRequest.GetAttributes().GetRequest().GetHttp().GetHeaders()
+	currentBody := authRequest.GetAttributes().GetRequest().GetHttp().GetBody()
+
+	s.Equal(newHeader, currentHeaders)
+	s.Empty(currentBody)
 }
 
 func (s *AutopseudoTestSuite) TestHeaders_ComplexGQLQuery() {
-	res, err := s.filter.OnHTTPRequest(context.TODO(), nil, map[string]string{
+	authRequest := returnAuthV3CheckRequest("", map[string]string{
 		"authorization": s.authHeader,
 		":path":         "/gql?query=%0A%09%09%7B%0A%09%09++users%28filter%3A+%7Bpseudonym%3A+%7Beq%3A+%22%24%24nid%3Asubject%24%24%22%7D%7D%29+%7B%0A%09%09%09%09contactDetails+%7B%0A%09%09%09++phone%0A%09%09%09++address+%7B%0A%09%09%09%09houseNumber%0A%09%09%09++%7D%0A%09%09%09%7D%0A%09%09++%7D%0A%09%09%7D%0A%09&variables=%7B%7D",
 	})
+	err := s.filter.Check(context.TODO(), authRequest)
 
 	s.Require().NoError(err)
-	s.Require().NotNil(res)
 
-	expectedResponse := &filter.ProcessingResponse{
-		NewHeaders: map[string]string{
-			"authorization": s.authHeader,
-			":path":         "/gql?query=%0A%09%09%7B%0A%09%09++users%28filter%3A+%7Bpseudonym%3A+%7Beq%3A+%22QUJDREVGRw%3D%3D%22%7D%7D%29+%7B%0A%09%09%09%09contactDetails+%7B%0A%09%09%09++phone%0A%09%09%09++address+%7B%0A%09%09%09%09houseNumber%0A%09%09%09++%7D%0A%09%09%09%7D%0A%09%09++%7D%0A%09%09%7D%0A%09&variables=%7B%7D",
-		},
-		NewBody:           nil,
-		ImmediateResponse: nil,
+	NewHeaders := map[string]string{
+		"authorization": s.authHeader,
+		":path":         "/gql?query=%0A%09%09%7B%0A%09%09++users%28filter%3A+%7Bpseudonym%3A+%7Beq%3A+%22QUJDREVGRw%3D%3D%22%7D%7D%29+%7B%0A%09%09%09%09contactDetails+%7B%0A%09%09%09++phone%0A%09%09%09++address+%7B%0A%09%09%09%09houseNumber%0A%09%09%09++%7D%0A%09%09%09%7D%0A%09%09++%7D%0A%09%09%7D%0A%09&variables=%7B%7D",
 	}
-	s.Require().EqualValues(expectedResponse, res)
+
+	currentHeaders := authRequest.GetAttributes().GetRequest().GetHttp().GetHeaders()
+	currentBody := authRequest.GetAttributes().GetRequest().GetHttp().GetBody()
+
+	s.Equal(NewHeaders, currentHeaders)
+	s.Empty(currentBody)
 }
 
 func (s *AutopseudoTestSuite) TestBody() {
-	headers := map[string]string{
+	authRequest := returnAuthV3CheckRequest("Some random nonsense containing $$nid:subject$$ indeed very !n$t4$$$$eresting", map[string]string{
 		"authorization": s.authHeader,
 		":path":         "/something",
-	}
+	})
 
-	res, err := s.filter.OnHTTPRequest(context.TODO(), []byte("Some random nonsense containing $$nid:subject$$ indeed very !n$t4$$$$eresting"), headers)
+	err := s.filter.Check(context.TODO(), authRequest)
 
 	s.Require().NoError(err)
-	expectedResponse := &filter.ProcessingResponse{
-		NewHeaders: map[string]string{
-			"authorization":  s.authHeader,
-			"content-length": "74",
-			":path":          "/something",
-		},
-		NewBody:           []byte("Some random nonsense containing QUJDREVGRw== indeed very !n$t4$$$$eresting"),
-		ImmediateResponse: nil,
+	NewHeaders := map[string]string{
+		"authorization":  s.authHeader,
+		"content-length": "74",
+		":path":          "/something",
 	}
+	NewBody := "Some random nonsense containing QUJDREVGRw== indeed very !n$t4$$$$eresting"
 
-	s.Equal(expectedResponse, res)
+	currentHeaders := authRequest.GetAttributes().GetRequest().GetHttp().GetHeaders()
+	currentBody := authRequest.GetAttributes().GetRequest().GetHttp().GetBody()
+
+	s.Equal(currentHeaders, NewHeaders)
+	s.Equal(currentBody, NewBody)
 }
 
 func (s *AutopseudoTestSuite) TestHeadersAndBody() {
-	res, err := s.filter.OnHTTPRequest(context.TODO(), []byte("Some random nonsense containing $$nid:subject$$ indeed very !n$t4$$$$eresting"), map[string]string{
-		"authorization": s.authHeader,
-		":path":         "/something?apple=something+containing+%24%24nid%3Asubject%24%24+and+%24%24nid%3Asoobjact%24%24&pie=made+of+pears",
-	})
+	authRequest := returnAuthV3CheckRequest("Some random nonsense containing $$nid:subject$$ indeed very !n$t4$$$$eresting",
+		map[string]string{
+			"authorization": s.authHeader,
+			":path":         "/something?apple=something+containing+%24%24nid%3Asubject%24%24+and+%24%24nid%3Asoobjact%24%24&pie=made+of+pears",
+		})
+
+	err := s.filter.Check(context.TODO(), authRequest)
 
 	s.Require().NoError(err)
-	s.Require().NotNil(res)
 
-	expectedResponse := &filter.ProcessingResponse{
-		NewHeaders: map[string]string{
-			"authorization":  s.authHeader,
-			"content-length": "74",
-			":path":          "/something?apple=something+containing+QUJDREVGRw%3D%3D+and+%24%24nid%3Asoobjact%24%24&pie=made+of+pears",
-		},
-		NewBody:           []byte("Some random nonsense containing QUJDREVGRw== indeed very !n$t4$$$$eresting"),
-		ImmediateResponse: nil,
+	NewHeaders := map[string]string{
+		"authorization":  s.authHeader,
+		"content-length": "74",
+		":path":          "/something?apple=something+containing+QUJDREVGRw%3D%3D+and+%24%24nid%3Asoobjact%24%24&pie=made+of+pears",
 	}
-	s.Require().EqualValues(expectedResponse, res)
+	NewBody := []byte("Some random nonsense containing QUJDREVGRw== indeed very !n$t4$$$$eresting")
+
+	currentHeaders := authRequest.GetAttributes().GetRequest().GetHttp().GetHeaders()
+	currentBody := authRequest.GetAttributes().GetRequest().GetHttp().GetBody()
+
+	s.Require().EqualValues(NewHeaders, currentHeaders)
+	s.Require().EqualValues(NewBody, currentBody)
 }
 
 func TestAutopseudoTestSuite(t *testing.T) {

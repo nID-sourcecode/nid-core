@@ -1,3 +1,4 @@
+// Package auditlog
 package main
 
 import (
@@ -5,12 +6,12 @@ import (
 	"github.com/vrischmann/envconfig"
 	"google.golang.org/grpc"
 
-	"lab.weave.nl/nid/nid-core/pkg/environment"
-	"lab.weave.nl/nid/nid-core/pkg/utilities/grpcserver"
-	"lab.weave.nl/nid/nid-core/pkg/utilities/grpcserver/metrics"
-	"lab.weave.nl/nid/nid-core/pkg/utilities/grpcserver/servicebase"
-	"lab.weave.nl/nid/nid-core/pkg/utilities/log/v2"
-	pb "lab.weave.nl/nid/nid-core/svc/auditlog/proto"
+	"github.com/nID-sourcecode/nid-core/pkg/environment"
+	"github.com/nID-sourcecode/nid-core/pkg/utilities/grpcserver"
+	"github.com/nID-sourcecode/nid-core/pkg/utilities/grpcserver/metrics"
+	"github.com/nID-sourcecode/nid-core/pkg/utilities/grpcserver/servicebase"
+	"github.com/nID-sourcecode/nid-core/pkg/utilities/log/v2"
+	pb "github.com/nID-sourcecode/nid-core/svc/auditlog/proto"
 )
 
 func main() {
@@ -44,7 +45,7 @@ func main() {
 		auditLogServer: auditLogServer,
 	}
 
-	err = grpcserver.InitWithConf(registry, grpcConfig)
+	err = grpcserver.InitWithConf(registry, &grpcConfig)
 	if err != nil {
 		log.WithError(err).Fatal("unable to initialise grpc server")
 	}

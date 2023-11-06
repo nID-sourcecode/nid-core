@@ -1,3 +1,4 @@
+// Package dashboard
 package main
 
 import (
@@ -5,15 +6,15 @@ import (
 	"github.com/vrischmann/envconfig"
 	"google.golang.org/grpc"
 
-	"lab.weave.nl/nid/nid-core/pkg/jwtconfig"
-	"lab.weave.nl/nid/nid-core/pkg/utilities/grpcserver"
-	"lab.weave.nl/nid/nid-core/pkg/utilities/grpcserver/headers"
-	"lab.weave.nl/nid/nid-core/pkg/utilities/grpcserver/metrics"
-	"lab.weave.nl/nid/nid-core/pkg/utilities/grpcserver/servicebase"
-	"lab.weave.nl/nid/nid-core/pkg/utilities/jwt/v2"
-	"lab.weave.nl/nid/nid-core/pkg/utilities/log/v2"
-	"lab.weave.nl/nid/nid-core/pkg/utilities/password"
-	pb "lab.weave.nl/nid/nid-core/svc/dashboard/proto"
+	"github.com/nID-sourcecode/nid-core/pkg/jwtconfig"
+	"github.com/nID-sourcecode/nid-core/pkg/password"
+	"github.com/nID-sourcecode/nid-core/pkg/utilities/grpcserver"
+	"github.com/nID-sourcecode/nid-core/pkg/utilities/grpcserver/headers"
+	"github.com/nID-sourcecode/nid-core/pkg/utilities/grpcserver/metrics"
+	"github.com/nID-sourcecode/nid-core/pkg/utilities/grpcserver/servicebase"
+	"github.com/nID-sourcecode/nid-core/pkg/utilities/jwt/v2"
+	"github.com/nID-sourcecode/nid-core/pkg/utilities/log/v2"
+	pb "github.com/nID-sourcecode/nid-core/svc/dashboard/proto"
 )
 
 func initialise() (*DashboardServiceRegistry, *DashBoardConfig) {
@@ -71,7 +72,7 @@ func main() {
 	grpcConfig.Port = conf.Port
 	grpcConfig.LogLevel = conf.GetLogLevel()
 	grpcConfig.LogFormatter = conf.GetLogFormatter()
-	err := grpcserver.InitWithConf(registry, grpcConfig)
+	err := grpcserver.InitWithConf(registry, &grpcConfig)
 	if err != nil {
 		log.WithError(err).Fatal("Error initialising grpc server")
 	}

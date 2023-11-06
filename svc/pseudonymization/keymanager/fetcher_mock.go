@@ -1,7 +1,7 @@
 package keymanager
 
 import (
-	"github.com/lestrrat-go/jwx/jwk"
+	"github.com/lestrrat-go/jwx/v2/jwk"
 	"github.com/stretchr/testify/mock"
 )
 
@@ -11,8 +11,8 @@ type JWKSFetcherMock struct {
 }
 
 // Fetch mocks the Fetch method
-func (a *JWKSFetcherMock) Fetch(url string) (*jwk.Set, error) {
+func (a *JWKSFetcherMock) Fetch(url string) (jwk.Set, error) {
 	args := a.Called(url)
 
-	return args.Get(0).(*jwk.Set), args.Error(1)
+	return args.Get(0).(jwk.Set), args.Error(1)
 }

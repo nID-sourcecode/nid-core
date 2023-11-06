@@ -6,13 +6,13 @@ import (
 	"fmt"
 	"strings"
 
-	"lab.weave.nl/nid/nid-core/pkg/utilities/grpcserver/grpckeys"
+	"github.com/nID-sourcecode/nid-core/pkg/utilities/grpcserver/grpckeys"
 )
 
 // Error definitions
 var (
-	ErrIncorrectBasicAuthPrefix error = fmt.Errorf("incorrect basic auth prefix")
-	ErrIncorrectBasicAuthFormat error = fmt.Errorf("incorrect basic auth format")
+	ErrIncorrectBasicAuthPrefix = fmt.Errorf("incorrect basic auth prefix")
+	ErrIncorrectBasicAuthFormat = fmt.Errorf("incorrect basic auth format")
 )
 
 // GetBasicAuth retrieve basic auth from context

@@ -17,7 +17,7 @@ import (
 	"github.com/gofrs/uuid"
 	gqlparser "github.com/vektah/gqlparser/v2"
 	"github.com/vektah/gqlparser/v2/ast"
-	"lab.weave.nl/nid/nid-core/svc/luarunner/models"
+	"github.com/nID-sourcecode/nid-core/svc/luarunner/models"
 	"lab.weave.nl/weave/generator/gen/scalars"
 )
 

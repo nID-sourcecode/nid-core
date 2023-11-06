@@ -14,7 +14,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/suite"
 
-	"lab.weave.nl/nid/nid-core/pkg/environment"
+	"github.com/nID-sourcecode/nid-core/pkg/environment"
 )
 
 const jwtFormat = "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.%s.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
@@ -47,7 +47,7 @@ func (s *AutopseudoTestSuite) TestDecryptAndApplyPOST() {
 	}
 	claimsJSON, err := json.Marshal(claims)
 	s.Require().NoError(err)
-	authHeader := fmt.Sprintf(jwtFormat, base64.StdEncoding.EncodeToString(claimsJSON))
+	authHeader := fmt.Sprintf(jwtFormat, base64.RawURLEncoding.EncodeToString(claimsJSON))
 
 	gofight.New().POST("/decryptAndApply").
 		SetHeader(map[string]string{"Authorization": authHeader}).
@@ -84,7 +84,7 @@ func (s *AutopseudoTestSuite) TestDecryptAndApplyGET() {
 	}
 	claimsJSON, err := json.Marshal(claims)
 	s.Require().NoError(err)
-	authHeader := fmt.Sprintf(jwtFormat, base64.StdEncoding.EncodeToString(claimsJSON))
+	authHeader := fmt.Sprintf(jwtFormat, base64.RawURLEncoding.EncodeToString(claimsJSON))
 
 	gofight.New().GET("/decryptAndApply").
 		SetHeader(map[string]string{"Authorization": authHeader}).

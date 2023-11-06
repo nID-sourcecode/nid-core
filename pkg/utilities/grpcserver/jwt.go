@@ -7,7 +7,7 @@ import (
 	"github.com/golang-jwt/jwt"
 )
 
-//nolint: gochecknoglobals
+// nolint: gochecknoglobals
 var (
 	publicKey *rsa.PublicKey
 )
@@ -17,8 +17,8 @@ const BearerPrefix string = "Bearer "
 
 // Error messages and variables used in parsing jwt's
 var (
-	ErrInvalidToken          error = fmt.Errorf("invalid token")
-	ErrIncorrectBearerLength error = fmt.Errorf("incorrect bearer length")
+	ErrInvalidToken          = fmt.Errorf("invalid token")
+	ErrIncorrectBearerLength = fmt.Errorf("incorrect bearer length")
 )
 
 // GetClaimsWithoutValidation only returns the claims for a jwt token and does not check token validity.

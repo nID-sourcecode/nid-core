@@ -5,15 +5,15 @@ import (
 	"context"
 	"io"
 
-	ext_proc_pb "github.com/envoyproxy/go-control-plane/envoy/service/ext_proc/v3alpha"
+	ext_proc_pb "github.com/envoyproxy/go-control-plane/envoy/service/ext_proc/v3"
 	"github.com/gofrs/uuid"
 
-	"lab.weave.nl/nid/nid-core/pkg/extproc/filter"
-	"lab.weave.nl/nid/nid-core/pkg/extproc/mutation"
-	"lab.weave.nl/nid/nid-core/pkg/extproc/requestcontext"
-	"lab.weave.nl/nid/nid-core/pkg/utilities/errors"
-	grpcerrors "lab.weave.nl/nid/nid-core/pkg/utilities/grpcserver/errors"
-	"lab.weave.nl/nid/nid-core/pkg/utilities/log/v2"
+	"github.com/nID-sourcecode/nid-core/pkg/extproc/filter"
+	"github.com/nID-sourcecode/nid-core/pkg/extproc/mutation"
+	"github.com/nID-sourcecode/nid-core/pkg/extproc/requestcontext"
+	"github.com/nID-sourcecode/nid-core/pkg/utilities/errors"
+	grpcerrors "github.com/nID-sourcecode/nid-core/pkg/utilities/grpcserver/errors"
+	"github.com/nID-sourcecode/nid-core/pkg/utilities/log/v2"
 )
 
 // ExternalProcessorServer processes HTTP request/response streams

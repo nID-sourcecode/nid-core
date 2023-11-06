@@ -4,13 +4,13 @@ import (
 	"context"
 	"testing"
 
-	"github.com/sirupsen/logrus"
-	logrustest "github.com/sirupsen/logrus/hooks/test"
+	"github.com/sirupsen/logrus"                       //nolint:gomodguard
+	logrustest "github.com/sirupsen/logrus/hooks/test" //nolint:gomodguard
 	"github.com/stretchr/testify/suite"
 
-	"lab.weave.nl/nid/nid-core/pkg/utilities/grpctesthelpers"
-	"lab.weave.nl/nid/nid-core/pkg/utilities/log/v2"
-	pb "lab.weave.nl/nid/nid-core/svc/auditlog/proto"
+	"github.com/nID-sourcecode/nid-core/pkg/utilities/grpctesthelpers"
+	"github.com/nID-sourcecode/nid-core/pkg/utilities/log/v2"
+	pb "github.com/nID-sourcecode/nid-core/svc/auditlog/proto"
 )
 
 type AuditLogServiceTestSuite struct {

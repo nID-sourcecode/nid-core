@@ -18,7 +18,7 @@ import (
 	"github.com/jinzhu/gorm/dialects/postgres"
 	gqlparser "github.com/vektah/gqlparser/v2"
 	"github.com/vektah/gqlparser/v2/ast"
-	"lab.weave.nl/nid/nid-core/svc/wallet-gql/models"
+	"github.com/nID-sourcecode/nid-core/svc/wallet-gql/models"
 	"lab.weave.nl/weave/generator/gen/scalars"
 )
 
@@ -2446,7 +2446,7 @@ func (ec *executionContext) _Client_consents(ctx context.Context, field graphql.
 		if data, ok := tmp.([]*models.Consent); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*lab.weave.nl/nid/nid-core/svc/wallet-gql/models.Consent`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*github.com/nID-sourcecode/nid-core/svc/wallet-gql/models.Consent`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2993,7 +2993,7 @@ func (ec *executionContext) _Consent_client(ctx context.Context, field graphql.C
 		if data, ok := tmp.(*models.Client); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *lab.weave.nl/nid/nid-core/svc/wallet-gql/models.Client`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/nID-sourcecode/nid-core/svc/wallet-gql/models.Client`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -3372,7 +3372,7 @@ func (ec *executionContext) _Consent_user(ctx context.Context, field graphql.Col
 		if data, ok := tmp.(*models.User); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *lab.weave.nl/nid/nid-core/svc/wallet-gql/models.User`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/nID-sourcecode/nid-core/svc/wallet-gql/models.User`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -3754,7 +3754,7 @@ func (ec *executionContext) _EmailAddress_user(ctx context.Context, field graphq
 		if data, ok := tmp.(*models.User); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *lab.weave.nl/nid/nid-core/svc/wallet-gql/models.User`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/nID-sourcecode/nid-core/svc/wallet-gql/models.User`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -4695,7 +4695,7 @@ func (ec *executionContext) _PhoneNumber_user(ctx context.Context, field graphql
 		if data, ok := tmp.(*models.User); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *lab.weave.nl/nid/nid-core/svc/wallet-gql/models.User`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/nID-sourcecode/nid-core/svc/wallet-gql/models.User`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -4805,7 +4805,7 @@ func (ec *executionContext) _PhoneNumber_verificationType(ctx context.Context, f
 		if data, ok := tmp.(models.PhoneNumberVerificationType); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be lab.weave.nl/nid/nid-core/svc/wallet-gql/models.PhoneNumberVerificationType`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be github.com/nID-sourcecode/nid-core/svc/wallet-gql/models.PhoneNumberVerificationType`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -5790,7 +5790,7 @@ func (ec *executionContext) _User_consents(ctx context.Context, field graphql.Co
 		if data, ok := tmp.([]*models.Consent); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*lab.weave.nl/nid/nid-core/svc/wallet-gql/models.Consent`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*github.com/nID-sourcecode/nid-core/svc/wallet-gql/models.Consent`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -5907,7 +5907,7 @@ func (ec *executionContext) _User_emailAddresses(ctx context.Context, field grap
 		if data, ok := tmp.([]*models.EmailAddress); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*lab.weave.nl/nid/nid-core/svc/wallet-gql/models.EmailAddress`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*github.com/nID-sourcecode/nid-core/svc/wallet-gql/models.EmailAddress`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -5969,7 +5969,7 @@ func (ec *executionContext) _User_phoneNumbers(ctx context.Context, field graphq
 		if data, ok := tmp.([]*models.PhoneNumber); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*lab.weave.nl/nid/nid-core/svc/wallet-gql/models.PhoneNumber`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*github.com/nID-sourcecode/nid-core/svc/wallet-gql/models.PhoneNumber`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)

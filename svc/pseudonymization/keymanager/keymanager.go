@@ -2,6 +2,7 @@
 package keymanager
 
 import (
+	"context"
 	"crypto/rsa"
 	"encoding/binary"
 	"fmt"
@@ -10,29 +11,30 @@ import (
 	"time"
 
 	"github.com/ReneKroon/ttlcache"
-	"github.com/lestrrat-go/jwx/jwk"
+	"github.com/lestrrat-go/jwx/v2/jwa"
+	"github.com/lestrrat-go/jwx/v2/jwk"
 
-	"lab.weave.nl/nid/nid-core/pkg/utilities/errors"
+	"github.com/nID-sourcecode/nid-core/pkg/utilities/errors"
 )
 
 const byteLength = 8
 
 // Error definitions
 var (
-	ErrNoRSAKeyFound error = fmt.Errorf("no rsa key for encryption found in jwks")
+	errNoRSAKeyFound = fmt.Errorf("no rsa key for encryption found in jwks")
 )
 
 // IJWKSFetcher interface for fetching JWKS
 type IJWKSFetcher interface {
-	Fetch(string) (*jwk.Set, error)
+	Fetch(string) (jwk.Set, error)
 }
 
 // JWKSFetcher implementation of the IJWKSFetcher interface
 type JWKSFetcher struct{}
 
 // Fetch fetches as jwk url
-func (j *JWKSFetcher) Fetch(url string) (*jwk.Set, error) {
-	return jwk.Fetch(url)
+func (j *JWKSFetcher) Fetch(url string) (jwk.Set, error) {
+	return jwk.Fetch(context.TODO(), url)
 }
 
 // KeyManager manages keys
@@ -69,8 +71,11 @@ func (k KeyManager) GetKey(namespace string) (*rsa.PublicKey, error) {
 		return nil, errors.Wrap(err, "unable to fetch jwks")
 	}
 
-	for _, key := range set.Keys {
-		if key.Algorithm() == "RSA1_5" && key.KeyUsage() == string(jwk.ForEncryption) {
+	keyIterator := set.Keys(context.TODO())
+	for keyIterator.Next(context.TODO()) {
+		value := keyIterator.Pair().Value
+		key := value.(jwk.Key)
+		if key.Algorithm() == jwa.RSA1_5 && key.KeyUsage() == string(jwk.ForEncryption) {
 			rsaKey := parseRsaPublicKeyFromJwk(key)
 
 			k.cache.Set(namespace, rsaKey)
@@ -79,7 +84,7 @@ func (k KeyManager) GetKey(namespace string) (*rsa.PublicKey, error) {
 		}
 	}
 
-	return nil, errors.Wrap(ErrNoRSAKeyFound, "unable to find rsa key for given namespace")
+	return nil, errors.Wrap(errNoRSAKeyFound, "unable to find rsa key for given namespace")
 }
 
 // Cleanup cleansup key manager cache

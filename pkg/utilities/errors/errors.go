@@ -20,7 +20,7 @@ type ErrorUtility interface {
 	New(message string) error
 }
 
-var errorUtility ErrorUtility
+var errorUtility ErrorUtility //nolint:gochecknoglobals
 
 //nolint:gochecknoinits
 func init() {

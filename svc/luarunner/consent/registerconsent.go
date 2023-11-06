@@ -7,11 +7,11 @@ import (
 
 	"github.com/machinebox/graphql"
 
-	"lab.weave.nl/nid/nid-core/pkg/utilities/errors"
+	"github.com/nID-sourcecode/nid-core/pkg/utilities/errors"
 )
 
 // ErrServiceNotRecognized error definitions
-var ErrServiceNotRecognized error = fmt.Errorf("given service name was not recognised")
+var errServiceNotRecognized = fmt.Errorf("given service name was not recognised")
 
 const consentMutation = `mutation addConsent($input: CreateRequest!){
   createRequest(input: $input) {
@@ -52,7 +52,7 @@ func RegisterConsent(ctx context.Context, clientName, token string, metadata map
 	}
 
 	if len(idRes.Services) == 0 {
-		return ErrServiceNotRecognized
+		return errServiceNotRecognized
 	}
 	serviceID := idRes.Services[0].ID
 

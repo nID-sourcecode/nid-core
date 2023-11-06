@@ -7,12 +7,12 @@ import (
 	"github.com/gofrs/uuid"
 	"github.com/jinzhu/gorm"
 
-	"lab.weave.nl/nid/nid-core/pkg/utilities/database/v2"
-	grpcerrors "lab.weave.nl/nid/nid-core/pkg/utilities/grpcserver/errors"
-	"lab.weave.nl/nid/nid-core/pkg/utilities/log/v2"
-	"lab.weave.nl/nid/nid-core/svc/wallet-gql/models"
-	"lab.weave.nl/nid/nid-core/svc/wallet-rpc/gqlclient"
-	"lab.weave.nl/nid/nid-core/svc/wallet-rpc/proto"
+	"github.com/nID-sourcecode/nid-core/pkg/utilities/database/v2"
+	grpcerrors "github.com/nID-sourcecode/nid-core/pkg/utilities/grpcserver/errors"
+	"github.com/nID-sourcecode/nid-core/pkg/utilities/log/v2"
+	"github.com/nID-sourcecode/nid-core/svc/wallet-gql/models"
+	"github.com/nID-sourcecode/nid-core/svc/wallet-rpc/gqlclient"
+	"github.com/nID-sourcecode/nid-core/svc/wallet-rpc/proto"
 )
 
 // WalletServer handles authorization for the dashboard
